@@ -1,0 +1,10 @@
+{
+  "api_base_url": "https://saas.correacloud.com.br/api",
+  "company_id": "company-id",
+  "token": "PRINT_AGENT_TOKEN",
+  "queue_printer_name": "",
+  "windows_printer_name": "",
+  "encoding": "cp860",
+  "poll_interval_seconds": 5,
+  "heartbeat_interval_seconds": 30
+}

@@ -1,0 +1,8 @@
+{
+  "api_base_url": "http://11.88.88.8:3101",
+  "company_id": "company-id",
+  "token": "PRINT_AGENT_TOKEN",
+  "printer_name": "Nome da impressora no Windows",
+  "printer_encoding": "cp850",
+  "poll_interval_seconds": 5
+}

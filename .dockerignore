@@ -1,0 +1,17 @@
+.git
+.github
+.env
+.env.*
+secrets
+**/secrets
+**/node_modules
+**/dist
+**/uploads
+*.pem
+*.key
+*.p12
+*.pfx
+*.sql
+!backend/prisma/migrations/**/*.sql
+*.dump
+*.backup

@@ -1,0 +1,125 @@
+{
+  "id": "vibPizzariaTesteIa",
+  "name": "Vib - Pizzaria Big Burguer - Teste IA",
+  "active": true,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "vib/teste-ia/pizzaria-big-burguer/6d558f61-4f94-40aa-b96c-b8d6e8c38523/ticketz",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "entrada-vib-teste-ia",
+      "name": "Entrada Vib Teste IA",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        180,
+        300
+      ],
+      "webhookId": "vib-teste-ia-pizzaria-big-burguer"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst payload = input.body || input;\nconst message = payload.message || {};\nconst customer = payload.customer || {};\nconst company = payload.company || {\n  id: '6d558f61-4f94-40aa-b96c-b8d6e8c38523',\n  name: 'Pizzaria Big Burguer',\n  segment: 'restaurant'\n};\nconst userText = String(message.content || message.text || payload.content || '').trim() || 'Cliente iniciou atendimento.';\nconst system = [\n  'Voce e a assistente virtual da Pizzaria Big Burguer.',\n  'Responda em portugues brasileiro, com tom simpatico e direto.',\n  'Atendimento por WhatsApp: mensagens curtas, sem texto longo.',\n  'Nunca invente preco, produto, taxa, prazo ou disponibilidade.',\n  'Se o cliente quiser pedir algo, colete uma informacao por vez e confirme antes de finalizar.',\n  'Se faltar cardapio/contexto, explique que ainda esta em modo teste e peca para um atendente confirmar.'\n].join('\\n');\n\nreturn [{\n  json: {\n    payload,\n    company,\n    customer,\n    inbound: userText,\n    openaiBody: {\n      model: 'gpt-4.1-mini',\n      temperature: 0.2,\n      messages: [\n        { role: 'system', content: system },\n        { role: 'user', content: `Cliente: ${customer.name || 'Cliente'}\\nMensagem: ${userText}` }\n      ]\n    }\n  }\n}];"
+      },
+      "id": "preparar-openai",
+      "name": "Preparar OpenAI",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.OPENAI_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.openaiBody }}",
+        "options": {}
+      },
+      "id": "chamar-openai",
+      "name": "Chamar OpenAI",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        780,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const ai = $input.first().json;\nconst text = ai.choices?.[0]?.message?.content?.trim() || 'Oi! Ja te respondo por aqui.';\nreturn [{\n  json: {\n    ok: true,\n    mode: 'teste_ia',\n    ai: {\n      provider: 'openai',\n      model: ai.model || 'gpt-4.1-mini',\n      text\n    },\n    next: {\n      sendToCustomer: false,\n      note: 'MVP: resposta gerada. Proximo passo e plugar envio de volta ao Ticketz/SaaS.'\n    }\n  }\n}];"
+      },
+      "id": "normalizar-resposta",
+      "name": "Normalizar resposta",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1080,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Entrada Vib Teste IA": {
+      "main": [
+        [
+          {
+            "node": "Preparar OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar OpenAI": {
+      "main": [
+        [
+          {
+            "node": "Chamar OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chamar OpenAI": {
+      "main": [
+        [
+          {
+            "node": "Normalizar resposta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "vibCompanyId": "6d558f61-4f94-40aa-b96c-b8d6e8c38523",
+    "vibCompanySlug": "pizzaria-big-burguer",
+    "purpose": "teste-ia"
+  },
+  "tags": []
+}

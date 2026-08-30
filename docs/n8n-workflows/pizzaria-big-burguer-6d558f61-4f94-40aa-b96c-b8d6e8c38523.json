@@ -1,0 +1,57 @@
+{
+  "name": "Vib - Pizzaria Big Burguer - Ticketz para IA",
+  "active": true,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "vib/pizzaria-big-burguer/6d558f61-4f94-40aa-b96c-b8d6e8c38523/ticketz",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "company-webhook",
+      "name": "Entrada Vib/Ticketz",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        220,
+        300
+      ],
+      "webhookId": "vib-6d558f61-4f94-40aa-b96c-b8d6e8c38523"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst input = $input.first().json;\nconst company = {\n  id: \"6d558f61-4f94-40aa-b96c-b8d6e8c38523\",\n  name: \"Pizzaria Big Burguer\",\n  slug: \"pizzaria-big-burguer\"\n};\n\nconst event = {\n  event: \"ticketz.message.received\",\n  company,\n  receivedAt: new Date().toISOString(),\n  ticket: input.ticket,\n  customer: input.customer,\n  message: input.message,\n  raw: input\n};\n\nlet vib = { sent: false };\ntry {\n  vib = await this.helpers.httpRequest({\n    method: \"POST\",\n    url: \"http://11.88.88.8:3101/api/n8n/events\",\n    headers: {\n      \"Content-Type\": \"application/json\"\n    },\n    body: event,\n    json: true\n  });\n} catch (error) {\n  vib = { sent: false, error: error.message };\n}\n\nreturn [{ json: { ok: true, company, vib, event } }];\n"
+      },
+      "id": "company-router",
+      "name": "Preparar evento da empresa",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        520,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Entrada Vib/Ticketz": {
+      "main": [
+        [
+          {
+            "node": "Preparar evento da empresa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "vibCompanyId": "6d558f61-4f94-40aa-b96c-b8d6e8c38523",
+    "vibCompanySlug": "pizzaria-big-burguer"
+  },
+  "tags": []
+}

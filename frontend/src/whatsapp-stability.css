@@ -1,0 +1,209 @@
+/* Critical layout rules for the embedded Vib WhatsApp workspace. */
+.whatsappDesk {
+  width: 100%;
+  height: clamp(540px, calc(100dvh - 210px), 820px);
+  min-height: 0;
+  grid-template-columns: 300px minmax(360px, 1fr) 330px;
+  align-items: stretch;
+}
+
+.chatList,
+.chatPane,
+.orderAssist {
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.chatList {
+  grid-template-rows: auto auto auto auto minmax(0, 1fr);
+}
+
+.chatPane {
+  grid-template-rows: auto minmax(0, 1fr) auto auto auto;
+}
+
+.messageArea,
+.ticketList {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.chatComposer {
+  position: relative;
+  z-index: 2;
+  flex: 0 0 auto;
+  min-height: 68px;
+}
+
+.chatComposer > input:not(.chatFileInput) {
+  width: 100%;
+  min-width: 0;
+}
+
+.orderAssist {
+  grid-template-rows: auto auto auto auto minmax(0, 1fr);
+}
+
+.ticketzSearchActions,
+.assistActions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: start;
+  gap: 8px;
+}
+
+.ticketzSearchActions button,
+.assistActions button {
+  min-height: 36px;
+  padding: 7px 9px;
+}
+
+.assistActions .dangerAction {
+  grid-column: 1 / -1;
+}
+
+.ticketzSearchActions button {
+  background: #26343d;
+  color: #e9edef;
+  font-size: 12px;
+}
+
+.ticketzSearchResults {
+  display: grid;
+  max-height: 190px;
+  overflow: auto;
+  gap: 5px;
+  padding: 8px;
+  border: 1px solid #314651;
+  border-radius: 8px;
+  background: #18252d;
+}
+
+.ticketzSearchResults button {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 52px;
+  padding: 7px;
+  border-radius: 6px;
+  background: #21313a;
+  color: #e9edef;
+  text-align: left;
+}
+
+.ticketAvatar {
+  position: relative;
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #00a884;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.ticketAvatar.large {
+  width: 42px;
+  height: 42px;
+}
+
+.ticketAvatar img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ticketzSearchResults .ticketAvatar {
+  width: 32px;
+  height: 32px;
+  font-size: 10px;
+}
+
+.chatContactHeader {
+  min-width: 0;
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+}
+
+.chatContactHeader > div,
+.ticketzSearchResults button div {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.chatContactHeader strong,
+.chatContactHeader span,
+.ticketzSearchResults span,
+.ticketzSearchResults small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chatMediaImage {
+  width: min(320px, 100%);
+  max-width: 100%;
+  max-height: 320px;
+  object-fit: contain;
+}
+
+@media (max-width: 1100px) {
+  .whatsappDesk {
+    height: auto;
+    min-height: 640px;
+    grid-template-columns: 280px minmax(0, 1fr);
+  }
+
+  .chatList,
+  .chatPane {
+    height: 640px;
+  }
+
+  .orderAssist {
+    height: auto;
+  }
+
+  .orderAssist {
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: auto;
+  }
+
+  .orderAssist > header,
+  .connectionBox,
+  .assistHint {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 720px) {
+  .whatsappDesk {
+    grid-template-columns: 1fr;
+  }
+
+  .orderAssist {
+    grid-column: auto;
+    grid-template-columns: 1fr;
+  }
+
+  .chatList,
+  .chatPane {
+    height: min(70dvh, 640px);
+    min-height: 480px;
+  }
+
+  .chatComposer {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+}

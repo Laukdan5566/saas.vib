@@ -1,0 +1,804 @@
+[
+  {
+    "id": "pizzas",
+    "name": "Pizzas",
+    "items": [
+      {
+        "id": "pizza-mussarela",
+        "name": "01 - Mussarela",
+        "description": "Mussarela, tomate, azeitona e oregano.",
+        "image": "/pizza-thumb.jpeg",
+        "sizes": [
+          {
+            "id": "media",
+            "name": "30cm Media - 8 fatias",
+            "price": 48.9
+          },
+          {
+            "id": "grande",
+            "name": "35cm Grande - 10 fatias",
+            "price": 62.9
+          },
+          {
+            "id": "gigante",
+            "name": "40cm Gigante - 12 fatias",
+            "price": 75.9
+          },
+          {
+            "id": "maracana",
+            "name": "50cm Maracana - aprox. 20 pedacos",
+            "price": 96.9
+          }
+        ]
+      },
+      {
+        "id": "pizza-presunto",
+        "name": "02 - Presunto",
+        "description": "Mussarela, presunto, tomate, azeitona e oregano.",
+        "image": "/pizza-thumb.jpeg",
+        "sizes": [
+          {
+            "id": "media",
+            "name": "30cm Media - 8 fatias",
+            "price": 52.9
+          },
+          {
+            "id": "grande",
+            "name": "35cm Grande - 10 fatias",
+            "price": 67.9
+          },
+          {
+            "id": "gigante",
+            "name": "40cm Gigante - 12 fatias",
+            "price": 79.9
+          },
+          {
+            "id": "maracana",
+            "name": "50cm Maracana - aprox. 20 pedacos",
+            "price": 102.9
+          }
+        ]
+      },
+      {
+        "id": "pizza-bacon",
+        "name": "03 - Bacon",
+        "description": "Mussarela, bacon, cebola, tomate, azeitona e oregano.",
+        "image": "/pizza-thumb.jpeg",
+        "sizes": [
+          {
+            "id": "media",
+            "name": "30cm Media - 8 fatias",
+            "price": 52.9
+          },
+          {
+            "id": "grande",
+            "name": "35cm Grande - 10 fatias",
+            "price": 67.9
+          },
+          {
+            "id": "gigante",
+            "name": "40cm Gigante - 12 fatias",
+            "price": 79.9
+          },
+          {
+            "id": "maracana",
+            "name": "50cm Maracana - aprox. 20 pedacos",
+            "price": 102.9
+          }
+        ]
+      },
+      {
+        "id": "pizza-palmito",
+        "name": "04 - Palmito",
+        "description": "Mussarela, palmito, ervilha, tomate, azeitona e oregano.",
+        "image": "/pizza-thumb.jpeg",
+        "sizes": [
+          {
+            "id": "media",
+            "name": "30cm Media - 8 fatias",
+            "price": 54.9
+          },
+          {
+            "id": "grande",
+            "name": "35cm Grande - 10 fatias",
+            "price": 69.9
+          },
+          {
+            "id": "gigante",
+            "name": "40cm Gigante - 12 fatias",
+            "price": 81.9
+          },
+          {
+            "id": "maracana",
+            "name": "50cm Maracana - aprox. 20 pedacos",
+            "price": 105.9
+          }
+        ]
+      },
+      {
+        "id": "pizza-atum",
+        "name": "05 - Atum",
+        "description": "Mussarela, atum, cebola, tomate, azeitona e oregano.",
+        "image": "/pizza-thumb.jpeg",
+        "sizes": [
+          {
+            "id": "media",
+            "name": "30cm Media - 8 fatias",
+            "price": 55.9
+          },
+          {
+            "id": "grande",
+            "name": "35cm Grande - 10 fatias",
+            "price": 70.9
+          },
+          {
+            "id": "gigante",
+            "name": "40cm Gigante - 12 fatias",
+            "price": 82.9
+          },
+          {
+            "id": "maracana",
+            "name": "50cm Maracana - aprox. 20 pedacos",
+            "price": 106.9
+          }
+        ]
+      },
+      {
+        "id": "pizza-champignon",
+        "name": "06 - Champignon",
+        "description": "Mussarela, champignon, milho, ervilha, tomate, azeitona e oregano.",
+        "image": "/pizza-thumb.jpeg",
+        "sizes": [
+          {
+            "id": "media",
+            "name": "30cm Media - 8 fatias",
+            "price": 55.9
+          },
+          {
+            "id": "grande",
+            "name": "35cm Grande - 10 fatias",
+            "price": 70.9
+          },
+          {
+            "id": "gigante",
+            "name": "40cm Gigante - 12 fatias",
+            "price": 82.9
+          },
+          {
+            "id": "maracana",
+            "name": "50cm Maracana - aprox. 20 pedacos",
+            "price": 106.9
+          }
+        ]
+      },
+      {
+        "id": "pizza-calabresa",
+        "name": "07 - Calabresa",
+        "description": "Mussarela, calabresa, tomate, azeitona e oregano.",
+        "image": "/pizza-thumb.jpeg",
+        "sizes": [
+          {
+            "id": "media",
+            "name": "30cm Media - 8 fatias",
+            "price": 52.9
+          },
+          {
+            "id": "grande",
+            "name": "35cm Grande - 10 fatias",
+            "price": 67.9
+          },
+          {
+            "id": "gigante",
+            "name": "40cm Gigante - 12 fatias",
+            "price": 79.9
+          },
+          {
+            "id": "maracana",
+            "name": "50cm Maracana - aprox. 20 pedacos",
+            "price": 102.9
+          }
+        ]
+      },
+      {
+        "id": "pizza-calabresa-bacon",
+        "name": "08 - Calabresa c/ Bacon",
+        "description": "Mussarela, calabresa, bacon, cebola, tomate, azeitona e oregano.",
+        "image": "/pizza-thumb.jpeg",
+        "sizes": [
+          {
+            "id": "media",
+            "name": "30cm Media - 8 fatias",
+            "price": 55.9
+          },
+          {
+            "id": "grande",
+            "name": "35cm Grande - 10 fatias",
+            "price": 70.9
+          },
+          {
+            "id": "gigante",
+            "name": "40cm Gigante - 12 fatias",
+            "price": 82.9
+          },
+          {
+            "id": "maracana",
+            "name": "50cm Maracana - aprox. 20 pedacos",
+            "price": 106.9
+          }
+        ]
+      },
+      {
+        "id": "pizza-lombo-canadense",
+        "name": "09 - Lombo Canadense",
+        "description": "Mussarela, lombo canadense, cebola, tomate, azeitona e oregano.",
+        "image": "/pizza-thumb.jpeg",
+        "sizes": [
+          {
+            "id": "media",
+            "name": "30cm Media - 8 fatias",
+            "price": 55.9
+          },
+          {
+            "id": "grande",
+            "name": "35cm Grande - 10 fatias",
+            "price": 70.9
+          },
+          {
+            "id": "gigante",
+            "name": "40cm Gigante - 12 fatias",
+            "price": 82.9
+          },
+          {
+            "id": "maracana",
+            "name": "50cm Maracana - aprox. 20 pedacos",
+            "price": 106.9
+          }
+        ]
+      },
+      {
+        "id": "pizza-3-queijos",
+        "name": "11 - 3 Queijos",
+        "description": "Mussarela, parmesao, provolone, tomate, azeitona e oregano.",
+        "image": "/pizza-thumb.jpeg",
+        "sizes": [
+          {
+            "id": "media",
+            "name": "30cm Media - 8 fatias",
+            "price": 54.9
+          },
+          {
+            "id": "grande",
+            "name": "35cm Grande - 10 fatias",
+            "price": 69.9
+          },
+          {
+            "id": "gigante",
+            "name": "40cm Gigante - 12 fatias",
+            "price": 81.9
+          },
+          {
+            "id": "maracana",
+            "name": "50cm Maracana - aprox. 20 pedacos",
+            "price": 106.9
+          }
+        ]
+      },
+      {
+        "id": "pizza-4-queijos",
+        "name": "12 - 4 Queijos",
+        "description": "Mussarela, parmesao, provolone, cheddar, tomate, azeitona e oregano.",
+        "image": "/pizza-thumb.jpeg",
+        "sizes": [
+          {
+            "id": "media",
+            "name": "30cm Media - 8 fatias",
+            "price": 56.9
+          },
+          {
+            "id": "grande",
+            "name": "35cm Grande - 10 fatias",
+            "price": 71.9
+          },
+          {
+            "id": "gigante",
+            "name": "40cm Gigante - 12 fatias",
+            "price": 83.9
+          },
+          {
+            "id": "maracana",
+            "name": "50cm Maracana - aprox. 20 pedacos",
+            "price": 107.9
+          }
+        ]
+      },
+      {
+        "id": "pizza-carijo",
+        "name": "13 - Carijo",
+        "description": "Mussarela, frango, milho, tomate, azeitona e oregano.",
+        "image": "/pizza-thumb.jpeg",
+        "sizes": [
+          {
+            "id": "media",
+            "name": "30cm Media - 8 fatias",
+            "price": 52.9
+          },
+          {
+            "id": "grande",
+            "name": "35cm Grande - 10 fatias",
+            "price": 67.9
+          },
+          {
+            "id": "gigante",
+            "name": "40cm Gigante - 12 fatias",
+            "price": 79.9
+          },
+          {
+            "id": "maracana",
+            "name": "50cm Maracana - aprox. 20 pedacos",
+            "price": 102.9
+          }
+        ]
+      },
+      {
+        "id": "pizza-caipira",
+        "name": "14 - Caipira",
+        "description": "Mussarela, frango, bacon, parmesao, tomate, azeitona e oregano.",
+        "image": "/pizza-thumb.jpeg",
+        "sizes": [
+          {
+            "id": "media",
+            "name": "30cm Media - 8 fatias",
+            "price": 55.9
+          },
+          {
+            "id": "grande",
+            "name": "35cm Grande - 10 fatias",
+            "price": 70.9
+          },
+          {
+            "id": "gigante",
+            "name": "40cm Gigante - 12 fatias",
+            "price": 82.9
+          },
+          {
+            "id": "maracana",
+            "name": "50cm Maracana - aprox. 20 pedacos",
+            "price": 106.9
+          }
+        ]
+      },
+      {
+        "id": "pizza-frango-palmito",
+        "name": "15 - Frango c/ Palmito",
+        "description": "Mussarela, frango, palmito, tomate, azeitona e oregano.",
+        "image": "/pizza-thumb.jpeg",
+        "sizes": [
+          {
+            "id": "media",
+            "name": "30cm Media - 8 fatias",
+            "price": 55.9
+          },
+          {
+            "id": "grande",
+            "name": "35cm Grande - 10 fatias",
+            "price": 70.9
+          },
+          {
+            "id": "gigante",
+            "name": "40cm Gigante - 12 fatias",
+            "price": 82.9
+          },
+          {
+            "id": "maracana",
+            "name": "50cm Maracana - aprox. 20 pedacos",
+            "price": 106.9
+          }
+        ]
+      },
+      {
+        "id": "pizza-frango-catupiry",
+        "name": "16 - Frango c/ Catupiry",
+        "description": "Mussarela, frango, catupiry, tomate, azeitona e oregano.",
+        "image": "/pizza-thumb.jpeg",
+        "sizes": [
+          {
+            "id": "media",
+            "name": "30cm Media - 8 fatias",
+            "price": 55.9
+          },
+          {
+            "id": "grande",
+            "name": "35cm Grande - 10 fatias",
+            "price": 70.9
+          },
+          {
+            "id": "gigante",
+            "name": "40cm Gigante - 12 fatias",
+            "price": 82.9
+          },
+          {
+            "id": "maracana",
+            "name": "50cm Maracana - aprox. 20 pedacos",
+            "price": 106.9
+          }
+        ]
+      },
+      {
+        "id": "pizza-fricasse",
+        "name": "17 - Fricasse",
+        "description": "Mussarela, frango, palmito, presunto, ervilha, tomate, azeitona e oregano.",
+        "image": "/pizza-thumb.jpeg",
+        "sizes": [
+          {
+            "id": "media",
+            "name": "30cm Media - 8 fatias",
+            "price": 56.9
+          },
+          {
+            "id": "grande",
+            "name": "35cm Grande - 10 fatias",
+            "price": 69.9
+          },
+          {
+            "id": "gigante",
+            "name": "40cm Gigante - 12 fatias",
+            "price": 83.9
+          },
+          {
+            "id": "maracana",
+            "name": "50cm Maracana - aprox. 20 pedacos",
+            "price": 107.9
+          }
+        ]
+      },
+      {
+        "id": "pizza-moda-casa",
+        "name": "18 - Moda da Casa",
+        "description": "Mussarela, presunto, calabresa, bacon, palmito, ovos, milho, ervilha, tomate, azeitona e oregano.",
+        "image": "/pizza-thumb.jpeg",
+        "sizes": [
+          {
+            "id": "media",
+            "name": "30cm Media - 8 fatias",
+            "price": 60.9
+          },
+          {
+            "id": "grande",
+            "name": "35cm Grande - 10 fatias",
+            "price": 75.9
+          },
+          {
+            "id": "gigante",
+            "name": "40cm Gigante - 12 fatias",
+            "price": 88.9
+          },
+          {
+            "id": "maracana",
+            "name": "50cm Maracana - aprox. 20 pedacos",
+            "price": 112.9
+          }
+        ]
+      },
+      {
+        "id": "pizza-napolitana",
+        "name": "19 - Napolitana",
+        "description": "Mussarela, calabresa, ovos, cebola, pimentao, molho especial, tomate, azeitona e oregano.",
+        "image": "/pizza-thumb.jpeg",
+        "sizes": [
+          {
+            "id": "media",
+            "name": "30cm Media - 8 fatias",
+            "price": 55.9
+          },
+          {
+            "id": "grande",
+            "name": "35cm Grande - 10 fatias",
+            "price": 70.9
+          },
+          {
+            "id": "gigante",
+            "name": "40cm Gigante - 12 fatias",
+            "price": 82.9
+          },
+          {
+            "id": "maracana",
+            "name": "50cm Maracana - aprox. 20 pedacos",
+            "price": 106.9
+          }
+        ]
+      },
+      {
+        "id": "pizza-portuguesa",
+        "name": "20 - Portuguesa",
+        "description": "Mussarela, presunto, calabresa, pimentao, ovos, tomate, azeitona e oregano.",
+        "image": "/pizza-thumb.jpeg",
+        "sizes": [
+          {
+            "id": "media",
+            "name": "30cm Media - 8 fatias",
+            "price": 56.9
+          },
+          {
+            "id": "grande",
+            "name": "35cm Grande - 10 fatias",
+            "price": 71.9
+          },
+          {
+            "id": "gigante",
+            "name": "40cm Gigante - 12 fatias",
+            "price": 83.9
+          },
+          {
+            "id": "maracana",
+            "name": "50cm Maracana - aprox. 20 pedacos",
+            "price": 107.9
+          }
+        ]
+      },
+      {
+        "id": "pizza-vegetariana",
+        "name": "21 - Vegetariana",
+        "description": "Mussarela, palmito, champignon, milho, ervilha, cebola, pimentao, tomate, azeitona e oregano.",
+        "image": "/pizza-thumb.jpeg",
+        "sizes": [
+          {
+            "id": "media",
+            "name": "30cm Media - 8 fatias",
+            "price": 55.9
+          },
+          {
+            "id": "grande",
+            "name": "35cm Grande - 10 fatias",
+            "price": 70.9
+          },
+          {
+            "id": "gigante",
+            "name": "40cm Gigante - 12 fatias",
+            "price": 82.9
+          },
+          {
+            "id": "maracana",
+            "name": "50cm Maracana - aprox. 20 pedacos",
+            "price": 106.9
+          }
+        ]
+      },
+      {
+        "id": "pizza-toscana",
+        "name": "22 - Toscana",
+        "description": "Mussarela, calabresa, toscana moido, cebola, tomate picado, azeitona e oregano.",
+        "image": "/pizza-thumb.jpeg",
+        "sizes": [
+          {
+            "id": "media",
+            "name": "30cm Media - 8 fatias",
+            "price": 55.9
+          },
+          {
+            "id": "grande",
+            "name": "35cm Grande - 10 fatias",
+            "price": 70.9
+          },
+          {
+            "id": "gigante",
+            "name": "40cm Gigante - 12 fatias",
+            "price": 82.9
+          },
+          {
+            "id": "maracana",
+            "name": "50cm Maracana - aprox. 20 pedacos",
+            "price": 106.9
+          }
+        ]
+      },
+      {
+        "id": "pizza-moda-pizzaiolo",
+        "name": "24 - A Moda do Pizzaiolo",
+        "description": "Mussarela, frango desfiado, milho, bacon, catupiry, tomate, azeitona e oregano.",
+        "image": "/pizza-thumb.jpeg",
+        "sizes": [
+          {
+            "id": "media",
+            "name": "30cm Media - 8 fatias",
+            "price": 60.9
+          },
+          {
+            "id": "grande",
+            "name": "35cm Grande - 10 fatias",
+            "price": 75.9
+          },
+          {
+            "id": "gigante",
+            "name": "40cm Gigante - 12 fatias",
+            "price": 88.9
+          },
+          {
+            "id": "maracana",
+            "name": "50cm Maracana - aprox. 20 pedacos",
+            "price": 112.9
+          }
+        ]
+      },
+      {
+        "id": "pizza-brasileira",
+        "name": "25 - Brasileira",
+        "description": "Mussarela, presunto, palmito, milho, ovos, cebola, tomate, azeitona e oregano.",
+        "image": "/pizza-thumb.jpeg",
+        "sizes": [
+          {
+            "id": "media",
+            "name": "30cm Media - 8 fatias",
+            "price": 56.9
+          },
+          {
+            "id": "grande",
+            "name": "35cm Grande - 10 fatias",
+            "price": 71.9
+          },
+          {
+            "id": "gigante",
+            "name": "40cm Gigante - 12 fatias",
+            "price": 83.9
+          },
+          {
+            "id": "maracana",
+            "name": "50cm Maracana - aprox. 20 pedacos",
+            "price": 107.9
+          }
+        ]
+      },
+      {
+        "id": "pizza-lombo-especial",
+        "name": "27 - Lombo Canadense Especial",
+        "description": "Mussarela, lombo canadense, bacon, catupiry, tomate, azeitona e oregano.",
+        "image": "/pizza-thumb.jpeg",
+        "sizes": [
+          {
+            "id": "media",
+            "name": "30cm Media - 8 fatias",
+            "price": 56.9
+          },
+          {
+            "id": "grande",
+            "name": "35cm Grande - 10 fatias",
+            "price": 71.9
+          },
+          {
+            "id": "gigante",
+            "name": "40cm Gigante - 12 fatias",
+            "price": 83.9
+          },
+          {
+            "id": "maracana",
+            "name": "50cm Maracana - aprox. 20 pedacos",
+            "price": 107.9
+          }
+        ]
+      },
+      {
+        "id": "pizza-marguerita",
+        "name": "28 - Marguerita",
+        "description": "Mussarela, rodelas de tomate, parmesao, manjericao, azeitona e oregano.",
+        "image": "/pizza-thumb.jpeg",
+        "sizes": [
+          {
+            "id": "media",
+            "name": "30cm Media - 8 fatias",
+            "price": 48.9
+          },
+          {
+            "id": "grande",
+            "name": "35cm Grande - 10 fatias",
+            "price": 62.9
+          },
+          {
+            "id": "gigante",
+            "name": "40cm Gigante - 12 fatias",
+            "price": 75.9
+          },
+          {
+            "id": "maracana",
+            "name": "50cm Maracana - aprox. 20 pedacos",
+            "price": 96.9
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "refrigerantes",
+    "name": "Refrigerantes",
+    "items": [
+      {
+        "id": "coca-2l",
+        "name": "Coca-Cola 2 litros",
+        "description": "Refrigerante 2 litros.",
+        "price": 15,
+        "image": "/bebida-coca-cola.png"
+      },
+      {
+        "id": "coca-600ml",
+        "name": "Coca-Cola 600ml",
+        "description": "Refrigerante 600ml.",
+        "price": 9,
+        "image": "/bebida-coca-cola.png"
+      },
+      {
+        "id": "guarana-2l",
+        "name": "Guarana Antarctica 2L",
+        "description": "Refrigerante 2 litros.",
+        "price": 15,
+        "image": "/bebida-refrigerantes-sabores.png"
+      },
+      {
+        "id": "refri-sabores-2l",
+        "name": "Refrigerante sabores 2L",
+        "description": "Guarana, cola, laranja, uva, limao e outros sabores variados.",
+        "price": 14,
+        "image": "/bebida-refrigerantes-sabores.png",
+        "flavors": [
+          "Guarana",
+          "Cola",
+          "Laranja",
+          "Uva",
+          "Limao"
+        ]
+      },
+      {
+        "id": "refri-sabores-600ml",
+        "name": "Refrigerante sabores 600ml",
+        "description": "Guarana, cola, laranja, uva, limao e outros sabores variados.",
+        "price": 9,
+        "image": "/bebida-refrigerantes-sabores.png",
+        "flavors": [
+          "Guarana",
+          "Cola",
+          "Laranja",
+          "Uva",
+          "Limao"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "sucos",
+    "name": "Sucos",
+    "items": [
+      {
+        "id": "suco-acerola",
+        "name": "Acerola",
+        "description": "Suco natural.",
+        "price": 8,
+        "image": "/suco-acerola-500ml-bg-v2.png"
+      },
+      {
+        "id": "suco-graviola",
+        "name": "Graviola",
+        "description": "Suco natural.",
+        "price": 8,
+        "image": "/suco-graviola-500ml-bg-v2.png"
+      },
+      {
+        "id": "suco-abacaxi",
+        "name": "Abacaxi",
+        "description": "Suco natural.",
+        "price": 8,
+        "image": "/suco-abacaxi-500ml-bg-v2.png"
+      },
+      {
+        "id": "suco-maracuja",
+        "name": "Maracuja",
+        "description": "Suco natural.",
+        "price": 8,
+        "image": "/suco-maracuja-500ml-bg-v2.png"
+      },
+      {
+        "id": "suco-morango",
+        "name": "Morango",
+        "description": "Suco natural.",
+        "price": 8,
+        "image": "/suco-morango-500ml-bg-v2.png"
+      }
+    ]
+  }
+]

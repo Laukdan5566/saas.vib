@@ -1,0 +1,1146 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Segment {
+  restaurant
+  barbershop
+  generic
+}
+
+enum UserRole {
+  super_admin
+  company_admin
+  manager
+  attendant
+  delivery_user
+}
+
+enum BusinessHourType {
+  normal
+  delivery
+  appointment
+}
+
+enum AppointmentStatus {
+  requested
+  confirmed
+  completed
+  canceled
+  no_show
+}
+
+enum Origin {
+  whatsapp
+  painel
+  n8n
+}
+
+enum VehicleType {
+  motorcycle
+  bicycle
+  car
+  walking
+}
+
+enum DeliveryStatus {
+  pending
+  assigned
+  picked_up
+  on_route
+  delivered
+  canceled
+  failed
+}
+
+enum OrderStatus {
+  draft
+  waiting_confirmation
+  confirmed
+  preparing
+  ready
+  out_for_delivery
+  completed
+  canceled
+}
+
+enum OrderType {
+  delivery
+  pickup
+  table
+}
+
+enum PaymentStatus {
+  pending
+  paid
+  failed
+  canceled
+}
+
+enum PaymentType {
+  cash
+  pix
+  credit_card
+  debit_card
+  online
+}
+
+enum DiscountType {
+  fixed
+  percentage
+}
+
+enum BotTone {
+  formal
+  neutral
+  friendly
+  funny
+}
+
+enum MessageDirection {
+  inbound
+  outbound
+}
+
+enum SenderType {
+  customer
+  bot
+  attendant
+  system
+}
+
+enum MessageType {
+  text
+  image
+  audio
+  location
+  document
+}
+
+enum PrinterType {
+  windows
+  network
+  escpos
+  pdf
+}
+
+enum PrinterConnectionType {
+  local_agent
+  network_ip
+  usb
+}
+
+enum PaperWidth {
+  mm58 @map("58mm")
+  mm80 @map("80mm")
+  a4
+}
+
+enum PrintJobType {
+  kitchen_order
+  customer_receipt
+  delivery_receipt
+}
+
+enum PrintJobStatus {
+  pending
+  printing
+  printed
+  failed
+  canceled
+}
+
+enum BillingCycle {
+  monthly
+  quarterly
+  semiannual
+  annual
+}
+
+enum SubscriptionStatus {
+  trialing
+  active
+  past_due
+  suspended
+  canceled
+}
+
+enum BillingInvoiceStatus {
+  open
+  pending
+  paid
+  overdue
+  canceled
+  expired
+  failed
+}
+
+enum BillingPaymentMethod {
+  pix
+  boleto
+  manual
+}
+
+enum BillingProvider {
+  efi
+  manual
+}
+
+model Company {
+  id                   String   @id @default(uuid())
+  name                 String
+  slug                 String   @unique
+  publicId             String   @unique @default(cuid()) @map("public_id")
+  segment              Segment  @default(generic)
+  document             String?
+  logoUrl              String?  @map("logo_url")
+  phone                String?
+  whatsapp             String?
+  email                String?
+  address              String?
+  city                 String?
+  state                String?
+  zipCode              String?  @map("zip_code")
+  billingName          String?  @map("billing_name")
+  billingDocument      String?  @map("billing_document")
+  billingEmail         String?  @map("billing_email")
+  billingPhone         String?  @map("billing_phone")
+  billingStreet        String?  @map("billing_street")
+  billingNumber        String?  @map("billing_number")
+  billingNeighborhood  String?  @map("billing_neighborhood")
+  billingComplement    String?  @map("billing_complement")
+  billingCity          String?  @map("billing_city")
+  billingState         String?  @map("billing_state")
+  billingZipCode       String?  @map("billing_zip_code")
+  latitude             Decimal? @db.Decimal(10, 7)
+  longitude            Decimal? @db.Decimal(10, 7)
+  active               Boolean  @default(true)
+  plan                 String   @default("starter")
+  botEnabled           Boolean  @default(true) @map("bot_enabled")
+  ticketzBaseUrl       String?  @map("ticketz_base_url")
+  ticketzCompanyId     String?  @map("ticketz_company_id")
+  ticketzWhatsappId    String?  @map("ticketz_whatsapp_id")
+  ticketzQueueId       String?  @map("ticketz_queue_id")
+  ticketzApiToken      String?  @map("ticketz_api_token")
+  n8nWebhookUrl        String?  @map("n8n_webhook_url")
+  webhookSecret        String?  @map("webhook_secret")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  settings             CompanySettings?
+  modules              CompanyModule[]
+  users                User[]
+  whatsappConnections  WhatsappConnection[]
+  businessHours        BusinessHours[]
+  specialBusinessHours SpecialBusinessHours[]
+  menuCategories       MenuCategory[]
+  products             Product[]
+  services             Service[]
+  professionals        Professional[]
+  customers            Customer[]
+  customerAccounts     CustomerAccount[]
+  deliveryZones        DeliveryZone[]
+  deliveryPersons      DeliveryPerson[]
+  deliveries           Delivery[]
+  restaurantTables     RestaurantTable[]
+  orders               Order[]
+  paymentMethods       PaymentMethod[]
+  coupons              Coupon[]
+  faqs                 Faq[]
+  knowledgeBase        KnowledgeBase[]
+  botSettings          BotSettings?
+  tickets              Ticket[]
+  messageLogs          MessageLog[]
+  printers             Printer[]
+  printJobs            PrintJob[]
+  platformSubscription CompanySubscription?
+  billingInvoices      BillingInvoice[]
+  auditLogs            AuditLog[]
+
+  @@map("companies")
+}
+
+model CompanyModule {
+  id          String   @id @default(uuid())
+  companyId   String   @map("company_id")
+  moduleKey   String   @map("module_key")
+  name        String
+  description String?
+  active      Boolean  @default(true)
+  config      Json?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  company Company @relation(fields: [companyId], references: [id])
+
+  @@unique([companyId, moduleKey])
+  @@index([companyId, active])
+  @@map("company_modules")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  companyId    String?  @map("company_id")
+  name         String
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  phone        String?
+  role         UserRole @default(company_admin)
+  permissions  Json?
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  company   Company?   @relation(fields: [companyId], references: [id])
+  auditLogs AuditLog[]
+
+  @@index([companyId])
+  @@map("users")
+}
+
+model WhatsappConnection {
+  id                 String   @id @default(uuid())
+  companyId          String   @map("company_id")
+  name               String
+  session            String?
+  qrcode             String?
+  status             String   @default("DISCONNECTED")
+  battery            String?
+  plugged            Boolean?
+  retries            Int      @default(0)
+  greetingMessage    String?  @map("greeting_message")
+  farewellMessage    String?  @map("farewell_message")
+  completionMessage  String?  @map("completion_message")
+  outOfHoursMessage  String?  @map("out_of_hours_message")
+  ratingMessage      String?  @map("rating_message")
+  transferMessage    String?  @map("transfer_message")
+  provider           String   @default("native")
+  isDefault          Boolean  @default(false) @map("is_default")
+  language           String?  @default("pt-BR")
+  token              String?
+  channel            String   @default("whatsapp")
+  facebookUserId     String?  @map("facebook_user_id")
+  facebookUserToken  String?  @map("facebook_user_token")
+  facebookPageUserId String?  @map("facebook_page_user_id")
+  tokenMeta          String?  @map("token_meta")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  company Company @relation(fields: [companyId], references: [id])
+  tickets Ticket[]
+  authKeys WhatsappAuthKey[]
+
+  @@index([companyId, channel, status])
+  @@map("whatsapp_connections")
+}
+
+model WhatsappAuthKey {
+  connectionId String @map("connection_id")
+  type         String
+  key          String
+  value        String
+
+  connection WhatsappConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+
+  @@id([connectionId, type, key])
+  @@map("whatsapp_auth_keys")
+}
+
+model CompanySettings {
+  companyId                             String   @id @map("company_id")
+  timezone                              String   @default("America/Sao_Paulo")
+  currency                              String   @default("BRL")
+  defaultLanguage                       String   @default("pt-BR") @map("default_language")
+  averageResponseTime                   Int?     @map("average_response_time")
+  acceptOrders                          Boolean  @default(true) @map("accept_orders")
+  acceptAppointments                    Boolean  @default(true) @map("accept_appointments")
+  allowDelivery                         Boolean  @default(true) @map("allow_delivery")
+  allowPickup                           Boolean  @default(true) @map("allow_pickup")
+  allowScheduling                       Boolean  @default(true) @map("allow_scheduling")
+  minimumOrderValue                     Decimal  @default(0) @map("minimum_order_value") @db.Decimal(10, 2)
+  deliveryFeeDefault                    Decimal  @default(0) @map("delivery_fee_default") @db.Decimal(10, 2)
+  preparationTimeMinutes                Int      @default(30) @map("preparation_time_minutes")
+  autoAcceptOrders                      Boolean  @default(false) @map("auto_accept_orders")
+  requireHumanConfirmationBeforeFinish  Boolean  @default(true) @map("require_human_confirmation_before_finish")
+  orderAcceptedMessageTemplate          String?  @map("order_accepted_message_template")
+  orderOutForDeliveryMessageTemplate    String?  @map("order_out_for_delivery_message_template")
+  orderReadyMessageTemplate             String?  @map("order_ready_message_template")
+  createdAt                             DateTime @default(now()) @map("created_at")
+  updatedAt                             DateTime @updatedAt @map("updated_at")
+
+  company Company @relation(fields: [companyId], references: [id])
+
+  @@map("company_settings")
+}
+
+model BusinessHours {
+  id        String           @id @default(uuid())
+  companyId String           @map("company_id")
+  dayOfWeek Int              @map("day_of_week")
+  openTime  String?          @map("open_time")
+  closeTime String?          @map("close_time")
+  isClosed  Boolean          @default(false) @map("is_closed")
+  type      BusinessHourType @default(normal)
+
+  company Company @relation(fields: [companyId], references: [id])
+
+  @@index([companyId])
+  @@map("business_hours")
+}
+
+model SpecialBusinessHours {
+  id        String   @id @default(uuid())
+  companyId String   @map("company_id")
+  date      DateTime
+  openTime  String?  @map("open_time")
+  closeTime String?  @map("close_time")
+  isClosed  Boolean  @default(false) @map("is_closed")
+  reason    String?
+
+  company Company @relation(fields: [companyId], references: [id])
+
+  @@index([companyId, date])
+  @@map("special_business_hours")
+}
+
+model MenuCategory {
+  id          String   @id @default(uuid())
+  companyId   String   @map("company_id")
+  name        String
+  description String?
+  sortOrder   Int      @default(0) @map("sort_order")
+  active      Boolean  @default(true)
+
+  company  Company   @relation(fields: [companyId], references: [id])
+  products Product[]
+
+  @@index([companyId])
+  @@map("menu_categories")
+}
+
+model Product {
+  id                     String   @id @default(uuid())
+  companyId              String   @map("company_id")
+  categoryId             String?  @map("category_id")
+  name                   String
+  description            String?
+  price                  Decimal  @db.Decimal(10, 2)
+  promotionalPrice       Decimal? @map("promotional_price") @db.Decimal(10, 2)
+  imageUrl               String?  @map("image_url")
+  active                 Boolean  @default(true)
+  available              Boolean  @default(true)
+  preparationTimeMinutes Int?     @map("preparation_time_minutes")
+  sortOrder              Int      @default(0) @map("sort_order")
+
+  company      Company             @relation(fields: [companyId], references: [id])
+  category     MenuCategory?       @relation(fields: [categoryId], references: [id])
+  addonGroups  ProductAddonGroup[]
+  orderItems   OrderItem[]
+
+  @@index([companyId])
+  @@map("products")
+}
+
+model ProductAddonGroup {
+  id         String  @id @default(uuid())
+  companyId  String  @map("company_id")
+  productId  String  @map("product_id")
+  name       String
+  required   Boolean @default(false)
+  minChoices Int     @default(0) @map("min_choices")
+  maxChoices Int     @default(1) @map("max_choices")
+  sortOrder  Int     @default(0) @map("sort_order")
+  active     Boolean @default(true)
+
+  product Product        @relation(fields: [productId], references: [id])
+  addons  ProductAddon[]
+
+  @@index([companyId, productId])
+  @@map("product_addon_groups")
+}
+
+model ProductAddon {
+  id           String  @id @default(uuid())
+  companyId    String  @map("company_id")
+  addonGroupId String  @map("addon_group_id")
+  name         String
+  description  String?
+  price        Decimal @default(0) @db.Decimal(10, 2)
+  imageUrl     String? @map("image_url")
+  active       Boolean @default(true)
+  sortOrder    Int     @default(0) @map("sort_order")
+
+  addonGroup ProductAddonGroup @relation(fields: [addonGroupId], references: [id])
+
+  @@index([companyId, addonGroupId])
+  @@map("product_addons")
+}
+
+model Service {
+  id              String  @id @default(uuid())
+  companyId       String  @map("company_id")
+  name            String
+  description     String?
+  price           Decimal @db.Decimal(10, 2)
+  durationMinutes Int     @map("duration_minutes")
+  active          Boolean @default(true)
+
+  company              Company               @relation(fields: [companyId], references: [id])
+  professionalServices ProfessionalService[]
+  appointments         Appointment[]
+
+  @@index([companyId])
+  @@map("services")
+}
+
+model Professional {
+  id        String  @id @default(uuid())
+  companyId String  @map("company_id")
+  name      String
+  phone     String?
+  whatsapp  String?
+  active    Boolean @default(true)
+
+  company              Company                    @relation(fields: [companyId], references: [id])
+  professionalServices ProfessionalService[]
+  availability         ProfessionalAvailability[]
+  appointments         Appointment[]
+
+  @@index([companyId])
+  @@map("professionals")
+}
+
+model ProfessionalService {
+  id             String @id @default(uuid())
+  companyId      String @map("company_id")
+  professionalId String @map("professional_id")
+  serviceId      String @map("service_id")
+
+  professional Professional @relation(fields: [professionalId], references: [id])
+  service      Service      @relation(fields: [serviceId], references: [id])
+
+  @@unique([professionalId, serviceId])
+  @@index([companyId])
+  @@map("professional_services")
+}
+
+model ProfessionalAvailability {
+  id             String  @id @default(uuid())
+  companyId      String  @map("company_id")
+  professionalId String  @map("professional_id")
+  dayOfWeek      Int     @map("day_of_week")
+  startTime      String  @map("start_time")
+  endTime        String  @map("end_time")
+  isAvailable    Boolean @default(true) @map("is_available")
+
+  professional Professional @relation(fields: [professionalId], references: [id])
+
+  @@index([companyId, professionalId])
+  @@map("professional_availability")
+}
+
+model Appointment {
+  id             String            @id @default(uuid())
+  companyId      String            @map("company_id")
+  customerId     String            @map("customer_id")
+  serviceId      String            @map("service_id")
+  professionalId String?           @map("professional_id")
+  date           DateTime
+  time           String
+  status         AppointmentStatus @default(requested)
+  price          Decimal           @db.Decimal(10, 2)
+  notes          String?
+  origin         Origin            @default(painel)
+  ticketzTicketId String?          @map("ticketz_ticket_id")
+  createdAt      DateTime          @default(now()) @map("created_at")
+  updatedAt      DateTime          @updatedAt @map("updated_at")
+
+  customer     Customer      @relation(fields: [customerId], references: [id])
+  service      Service       @relation(fields: [serviceId], references: [id])
+  professional Professional? @relation(fields: [professionalId], references: [id])
+
+  @@index([companyId, date])
+  @@map("appointments")
+}
+
+model Customer {
+  id               String   @id @default(uuid())
+  companyId        String   @map("company_id")
+  name             String
+  phone            String?
+  whatsapp         String?
+  email            String?
+  profilePicUrl    String?  @map("profile_pic_url")
+  document         String?
+  defaultAddressId String?  @map("default_address_id")
+  notes            String?
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  company      Company           @relation(fields: [companyId], references: [id])
+  addresses    CustomerAddress[]
+  orders       Order[]
+  deliveries   Delivery[]
+  appointments Appointment[]
+  accounts     CustomerAccount[]
+
+  @@index([companyId, phone])
+  @@map("customers")
+}
+
+model CustomerAccount {
+  id                String    @id @default(uuid())
+  companyId         String    @map("company_id")
+  customerId        String    @map("customer_id")
+  provider          String    @default("google")
+  providerAccountId String    @map("provider_account_id")
+  email             String
+  passwordHash      String?   @map("password_hash")
+  name              String?
+  avatarUrl         String?   @map("avatar_url")
+  active            Boolean   @default(true)
+  lastLoginAt       DateTime? @map("last_login_at")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  company  Company  @relation(fields: [companyId], references: [id])
+  customer Customer @relation(fields: [customerId], references: [id])
+
+  @@unique([companyId, provider, providerAccountId])
+  @@index([companyId, email])
+  @@map("customer_accounts")
+}
+
+model CustomerAddress {
+  id           String   @id @default(uuid())
+  companyId    String   @map("company_id")
+  customerId   String   @map("customer_id")
+  label        String?
+  street       String?
+  number       String?
+  complement   String?
+  neighborhood String?
+  city         String?
+  state        String?
+  zipCode      String?  @map("zip_code")
+  reference    String?
+  latitude     Decimal? @db.Decimal(10, 7)
+  longitude    Decimal? @db.Decimal(10, 7)
+  isDefault    Boolean  @default(false) @map("is_default")
+
+  customer Customer @relation(fields: [customerId], references: [id])
+  orders   Order[]
+
+  @@index([companyId, customerId])
+  @@map("customer_addresses")
+}
+
+model DeliveryZone {
+  id                           String  @id @default(uuid())
+  companyId                    String  @map("company_id")
+  name                         String
+  neighborhood                 String?
+  deliveryFee                  Decimal @map("delivery_fee") @db.Decimal(10, 2)
+  minimumOrderValue            Decimal @default(0) @map("minimum_order_value") @db.Decimal(10, 2)
+  estimatedDeliveryTimeMinutes Int     @default(45) @map("estimated_delivery_time_minutes")
+  active                       Boolean @default(true)
+
+  company Company @relation(fields: [companyId], references: [id])
+
+  @@index([companyId])
+  @@map("delivery_zones")
+}
+
+model DeliveryPerson {
+  id               String      @id @default(uuid())
+  companyId        String      @map("company_id")
+  name             String
+  phone            String?
+  whatsapp         String?
+  document         String?
+  vehicleType      VehicleType @default(motorcycle) @map("vehicle_type")
+  plate            String?
+  active           Boolean     @default(true)
+  available        Boolean     @default(true)
+  currentLatitude  Decimal?    @map("current_latitude") @db.Decimal(10, 7)
+  currentLongitude Decimal?    @map("current_longitude") @db.Decimal(10, 7)
+  createdAt        DateTime    @default(now()) @map("created_at")
+  updatedAt        DateTime    @updatedAt @map("updated_at")
+
+  company    Company    @relation(fields: [companyId], references: [id])
+  deliveries Delivery[]
+
+  @@index([companyId, active, available])
+  @@map("delivery_persons")
+}
+
+model Delivery {
+  id                   String         @id @default(uuid())
+  companyId            String         @map("company_id")
+  orderId              String         @map("order_id")
+  deliveryPersonId     String?        @map("delivery_person_id")
+  customerId           String?        @map("customer_id")
+  status               DeliveryStatus @default(pending)
+  pickupAddress        String?        @map("pickup_address")
+  deliveryAddress      String?        @map("delivery_address")
+  deliveryLatitude     Decimal?       @map("delivery_latitude") @db.Decimal(10, 7)
+  deliveryLongitude    Decimal?       @map("delivery_longitude") @db.Decimal(10, 7)
+  deliveryFee          Decimal        @default(0) @map("delivery_fee") @db.Decimal(10, 2)
+  estimatedTimeMinutes Int?           @map("estimated_time_minutes")
+  assignedAt           DateTime?      @map("assigned_at")
+  pickedUpAt           DateTime?      @map("picked_up_at")
+  deliveredAt          DateTime?      @map("delivered_at")
+  notes                String?
+  deliveryCode         String?        @map("delivery_code")
+
+  company        Company         @relation(fields: [companyId], references: [id])
+  order          Order           @relation(fields: [orderId], references: [id])
+  deliveryPerson DeliveryPerson? @relation(fields: [deliveryPersonId], references: [id])
+  customer       Customer?       @relation(fields: [customerId], references: [id])
+  events         DeliveryEvent[]
+
+  @@index([companyId, status])
+  @@map("deliveries")
+}
+
+model DeliveryEvent {
+  id          String   @id @default(uuid())
+  companyId   String   @map("company_id")
+  deliveryId  String   @map("delivery_id")
+  status      String
+  description String?
+  latitude    Decimal? @db.Decimal(10, 7)
+  longitude   Decimal? @db.Decimal(10, 7)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  delivery Delivery @relation(fields: [deliveryId], references: [id])
+
+  @@index([companyId, deliveryId])
+  @@map("delivery_events")
+}
+
+model RestaurantTable {
+  id        String   @id @default(uuid())
+  companyId String   @map("company_id")
+  number    String
+  name      String?
+  capacity  Int      @default(4)
+  location  String?
+  status    String   @default("free")
+  active    Boolean  @default(true)
+  notes     String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  company Company @relation(fields: [companyId], references: [id])
+
+  @@unique([companyId, number])
+  @@index([companyId, active])
+  @@map("restaurant_tables")
+}
+
+model Order {
+  id                String        @id @default(uuid())
+  companyId         String        @map("company_id")
+  customerId        String?       @map("customer_id")
+  customerName      String?       @map("customer_name")
+  customerPhone     String?       @map("customer_phone")
+  status            OrderStatus   @default(draft)
+  orderType         OrderType     @map("order_type")
+  subtotal          Decimal       @default(0) @db.Decimal(10, 2)
+  deliveryFee       Decimal       @default(0) @map("delivery_fee") @db.Decimal(10, 2)
+  discount          Decimal       @default(0) @db.Decimal(10, 2)
+  total             Decimal       @default(0) @db.Decimal(10, 2)
+  paymentMethod     String?       @map("payment_method")
+  paymentStatus     PaymentStatus @default(pending) @map("payment_status")
+  deliveryAddressId String?       @map("delivery_address_id")
+  deliveryLatitude  Decimal?      @map("delivery_latitude") @db.Decimal(10, 7)
+  deliveryLongitude Decimal?      @map("delivery_longitude") @db.Decimal(10, 7)
+  notes             String?
+  origin            Origin        @default(painel)
+  ticketzTicketId   String?       @map("ticketz_ticket_id")
+  createdAt         DateTime      @default(now()) @map("created_at")
+  updatedAt         DateTime      @updatedAt @map("updated_at")
+
+  company         Company          @relation(fields: [companyId], references: [id])
+  customer        Customer?        @relation(fields: [customerId], references: [id])
+  deliveryAddress CustomerAddress? @relation(fields: [deliveryAddressId], references: [id])
+  items           OrderItem[]
+  payments        OrderPayment[]
+  deliveries      Delivery[]
+  printJobs       PrintJob[]
+
+  @@index([companyId, status])
+  @@map("orders")
+}
+
+model OrderItem {
+  id          String  @id @default(uuid())
+  companyId   String  @map("company_id")
+  orderId     String  @map("order_id")
+  productId   String? @map("product_id")
+  productName String  @map("product_name")
+  quantity    Int
+  unitPrice   Decimal @map("unit_price") @db.Decimal(10, 2)
+  subtotal    Decimal @db.Decimal(10, 2)
+  notes       String?
+
+  order   Order            @relation(fields: [orderId], references: [id])
+  product Product?         @relation(fields: [productId], references: [id])
+  addons  OrderItemAddon[]
+
+  @@index([companyId, orderId])
+  @@map("order_items")
+}
+
+model OrderItemAddon {
+  id          String  @id @default(uuid())
+  companyId   String  @map("company_id")
+  orderItemId String  @map("order_item_id")
+  addonId     String? @map("addon_id")
+  addonName   String  @map("addon_name")
+  price       Decimal @default(0) @db.Decimal(10, 2)
+
+  orderItem OrderItem @relation(fields: [orderItemId], references: [id])
+
+  @@index([companyId, orderItemId])
+  @@map("order_item_addons")
+}
+
+model PaymentMethod {
+  id           String      @id @default(uuid())
+  companyId    String      @map("company_id")
+  name         String
+  type         PaymentType
+  active       Boolean     @default(true)
+  instructions String?
+
+  company Company @relation(fields: [companyId], references: [id])
+  payments OrderPayment[]
+
+  @@index([companyId])
+  @@map("payment_methods")
+}
+
+model OrderPayment {
+  id              String        @id @default(uuid())
+  companyId       String        @map("company_id")
+  orderId         String        @map("order_id")
+  paymentMethodId String?       @map("payment_method_id")
+  amount          Decimal       @db.Decimal(10, 2)
+  status          PaymentStatus @default(pending)
+  transactionId   String?       @map("transaction_id")
+  paidAt          DateTime?     @map("paid_at")
+
+  order         Order          @relation(fields: [orderId], references: [id])
+  paymentMethod PaymentMethod? @relation(fields: [paymentMethodId], references: [id])
+
+  @@index([companyId, orderId])
+  @@map("order_payments")
+}
+
+model Coupon {
+  id                String       @id @default(uuid())
+  companyId         String       @map("company_id")
+  code              String
+  description       String?
+  discountType      DiscountType @map("discount_type")
+  discountValue     Decimal      @map("discount_value") @db.Decimal(10, 2)
+  minimumOrderValue Decimal      @default(0) @map("minimum_order_value") @db.Decimal(10, 2)
+  active            Boolean      @default(true)
+  startsAt          DateTime?    @map("starts_at")
+  expiresAt         DateTime?    @map("expires_at")
+  usageLimit        Int?         @map("usage_limit")
+
+  company Company @relation(fields: [companyId], references: [id])
+  usages  CouponUsage[]
+
+  @@unique([companyId, code])
+  @@map("coupons")
+}
+
+model CouponUsage {
+  id         String   @id @default(uuid())
+  companyId  String   @map("company_id")
+  couponId   String   @map("coupon_id")
+  customerId String?  @map("customer_id")
+  orderId    String?  @map("order_id")
+  usedAt     DateTime @default(now()) @map("used_at")
+
+  coupon Coupon @relation(fields: [couponId], references: [id])
+
+  @@index([companyId, couponId])
+  @@map("coupon_usages")
+}
+
+model Faq {
+  id       String  @id @default(uuid())
+  companyId String  @map("company_id")
+  question String
+  answer   String
+  category String?
+  active   Boolean @default(true)
+
+  company Company @relation(fields: [companyId], references: [id])
+
+  @@index([companyId, active])
+  @@map("faqs")
+}
+
+model KnowledgeBase {
+  id       String  @id @default(uuid())
+  companyId String  @map("company_id")
+  title    String
+  content  String
+  tags     String?
+  active   Boolean @default(true)
+
+  company Company @relation(fields: [companyId], references: [id])
+
+  @@index([companyId, active])
+  @@map("knowledge_base")
+}
+
+model BotSettings {
+  id                              String  @id @default(uuid())
+  companyId                       String  @unique @map("company_id")
+  tone                            BotTone @default(friendly)
+  useEmojis                       Boolean @default(true) @map("use_emojis")
+  greetingMessage                 String? @map("greeting_message")
+  outOfHoursMessage               String? @map("out_of_hours_message")
+  humanHandoffMessage             String? @map("human_handoff_message")
+  askCustomerName                 Boolean @default(true) @map("ask_customer_name")
+  askCustomerLocation             Boolean @default(true) @map("ask_customer_location")
+  askCustomerAddress              Boolean @default(true) @map("ask_customer_address")
+  confirmOrderBeforeFinish        Boolean @default(true) @map("confirm_order_before_finish")
+  confirmAppointmentBeforeFinish  Boolean @default(true) @map("confirm_appointment_before_finish")
+  transferToHumanWhenUnknown      Boolean @default(true) @map("transfer_to_human_when_unknown")
+  humanHandoffKeywords            String? @map("human_handoff_keywords")
+  maxBotInteractionsBeforeHandoff Int     @default(8) @map("max_bot_interactions_before_handoff")
+  autoCloseAfterMinutes           Int     @default(60) @map("auto_close_after_minutes")
+  createdAt                       DateTime @default(now()) @map("created_at")
+  updatedAt                       DateTime @updatedAt @map("updated_at")
+
+  company Company @relation(fields: [companyId], references: [id])
+
+  @@map("bot_settings")
+}
+
+model Ticket {
+  id              String   @id @default(uuid())
+  companyId       String   @map("company_id")
+  ticketzTicketId String?  @map("ticketz_ticket_id")
+  ticketzContactId String? @map("ticketz_contact_id")
+  whatsappConnectionId String? @map("whatsapp_connection_id")
+  customerId      String?  @map("customer_id")
+  status          String?
+  channel         String   @default("whatsapp")
+  queueId         String?  @map("queue_id")
+  assignedUserId  String?  @map("assigned_user_id")
+  unreadMessages  Int      @default(0) @map("unread_messages")
+  botEnabled      Boolean  @default(true) @map("bot_enabled")
+  humanTakeover   Boolean  @default(false) @map("human_takeover")
+  lastMessage     String?  @map("last_message")
+  lastMessageAt   DateTime? @map("last_message_at")
+  metadata        Json?
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  company            Company             @relation(fields: [companyId], references: [id])
+  whatsappConnection WhatsappConnection? @relation(fields: [whatsappConnectionId], references: [id])
+  logs               MessageLog[]
+
+  @@index([companyId, ticketzTicketId])
+  @@index([companyId, status, lastMessageAt])
+  @@map("tickets")
+}
+
+model MessageLog {
+  id          String           @id @default(uuid())
+  companyId   String           @map("company_id")
+  ticketId    String?          @map("ticket_id")
+  ticketzMessageId String?     @map("ticketz_message_id")
+  direction   MessageDirection
+  senderType  SenderType       @map("sender_type")
+  messageType MessageType      @map("message_type")
+  content     String?
+  metadata    Json?
+  sentToN8nAt DateTime?        @map("sent_to_n8n_at")
+  n8nErrorMessage String?      @map("n8n_error_message")
+  createdAt   DateTime         @default(now()) @map("created_at")
+
+  company Company @relation(fields: [companyId], references: [id])
+  ticket  Ticket? @relation(fields: [ticketId], references: [id])
+
+  @@index([companyId, ticketId])
+  @@map("message_logs")
+}
+
+model Printer {
+  id                 String                @id @default(uuid())
+  companyId          String                @map("company_id")
+  name               String
+  description        String?
+  printerType        PrinterType           @default(windows) @map("printer_type")
+  connectionType     PrinterConnectionType @default(local_agent) @map("connection_type")
+  ipAddress          String?               @map("ip_address")
+  port               Int?
+  paperWidth         PaperWidth            @default(mm80) @map("paper_width")
+  active             Boolean               @default(true)
+  defaultForOrders   Boolean               @default(false) @map("default_for_orders")
+  defaultForKitchen  Boolean               @default(false) @map("default_for_kitchen")
+  defaultForDelivery Boolean               @default(false) @map("default_for_delivery")
+  createdAt          DateTime              @default(now()) @map("created_at")
+  updatedAt          DateTime              @updatedAt @map("updated_at")
+
+  company   Company    @relation(fields: [companyId], references: [id])
+  printJobs PrintJob[]
+
+  @@index([companyId, active])
+  @@map("printers")
+}
+
+model PrintJob {
+  id           String         @id @default(uuid())
+  companyId    String         @map("company_id")
+  orderId      String         @map("order_id")
+  printerId    String         @map("printer_id")
+  type         PrintJobType
+  status       PrintJobStatus @default(pending)
+  content      String
+  errorMessage String?        @map("error_message")
+  attempts     Int            @default(0)
+  printedAt    DateTime?      @map("printed_at")
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @updatedAt @map("updated_at")
+
+  company Company @relation(fields: [companyId], references: [id])
+  order   Order   @relation(fields: [orderId], references: [id])
+  printer Printer @relation(fields: [printerId], references: [id])
+
+  @@index([companyId, status, createdAt])
+  @@map("print_jobs")
+}
+
+model PlatformPlan {
+  id                String       @id @default(uuid())
+  name              String
+  slug              String       @unique
+  description       String?
+  price             Decimal      @db.Decimal(10, 2)
+  currency          String       @default("BRL")
+  billingCycle      BillingCycle @default(monthly) @map("billing_cycle")
+  maxUsers          Int?         @map("max_users")
+  maxWhatsapp       Int?         @map("max_whatsapp")
+  maxCompanies      Int?         @map("max_companies")
+  enabledModules    Json?        @map("enabled_modules")
+  active            Boolean      @default(true)
+  public            Boolean      @default(false)
+  createdAt         DateTime     @default(now()) @map("created_at")
+  updatedAt         DateTime     @updatedAt @map("updated_at")
+
+  subscriptions CompanySubscription[]
+  invoices      BillingInvoice[]
+
+  @@map("platform_plans")
+}
+
+model CompanySubscription {
+  id                      String             @id @default(uuid())
+  companyId               String             @unique @map("company_id")
+  planId                  String?            @map("plan_id")
+  status                  SubscriptionStatus @default(active)
+  startsAt                DateTime           @default(now()) @map("starts_at")
+  currentPeriodStart      DateTime?          @map("current_period_start")
+  currentPeriodEnd        DateTime?          @map("current_period_end")
+  nextDueDate             DateTime?          @map("next_due_date")
+  paymentMethodPreference BillingPaymentMethod? @map("payment_method_preference")
+  notes                   String?
+  createdAt               DateTime           @default(now()) @map("created_at")
+  updatedAt               DateTime           @updatedAt @map("updated_at")
+
+  company  Company          @relation(fields: [companyId], references: [id])
+  plan     PlatformPlan?    @relation(fields: [planId], references: [id])
+  invoices BillingInvoice[]
+
+  @@index([status, nextDueDate])
+  @@map("company_subscriptions")
+}
+
+model BillingInvoice {
+  id                 String                @id @default(uuid())
+  companyId          String                @map("company_id")
+  subscriptionId     String?               @map("subscription_id")
+  planId             String?               @map("plan_id")
+  detail             String
+  status             BillingInvoiceStatus  @default(open)
+  value              Decimal               @db.Decimal(10, 2)
+  currency           String                @default("BRL")
+  dueDate            DateTime              @map("due_date")
+  paymentMethod      BillingPaymentMethod? @map("payment_method")
+  paymentUrl         String?               @map("payment_url")
+  pixCopyPaste       String?               @map("pix_copy_paste")
+  pixQrCodeImage     String?               @map("pix_qr_code_image")
+  boletoBarcode      String?               @map("boleto_barcode")
+  boletoPdfUrl       String?               @map("boleto_pdf_url")
+  txId               String?               @map("tx_id")
+  provider           BillingProvider?      @map("pay_gw")
+  providerChargeId   String?               @map("provider_charge_id")
+  providerLocationId String?               @map("provider_location_id")
+  providerPayload    Json?                 @map("pay_gw_data")
+  providerError      String?               @map("provider_error")
+  paidAt             DateTime?             @map("paid_at")
+  createdAt          DateTime              @default(now()) @map("created_at")
+  updatedAt          DateTime              @updatedAt @map("updated_at")
+
+  company      Company              @relation(fields: [companyId], references: [id])
+  subscription CompanySubscription? @relation(fields: [subscriptionId], references: [id])
+  plan         PlatformPlan?        @relation(fields: [planId], references: [id])
+
+  @@index([companyId, status])
+  @@index([companyId, dueDate])
+  @@index([txId])
+  @@map("billing_invoices")
+}
+
+model BillingGatewayConfig {
+  id                      String          @id @default(uuid())
+  provider                BillingProvider @default(efi)
+  environment             String
+  active                  Boolean         @default(false)
+  clientId                String?         @map("client_id")
+  encryptedClientSecret   String?         @map("encrypted_client_secret")
+  pixKey                  String?         @map("pix_key")
+  certPath                String?         @map("cert_path")
+  encryptedCertPassphrase String?         @map("encrypted_cert_passphrase")
+  metadata                Json?
+  createdAt               DateTime        @default(now()) @map("created_at")
+  updatedAt               DateTime        @updatedAt @map("updated_at")
+
+  @@unique([provider, environment])
+  @@index([provider, active])
+  @@map("billing_gateway_configs")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  companyId String?  @map("company_id")
+  userId    String?  @map("user_id")
+  action    String
+  entity    String
+  entityId  String?  @map("entity_id")
+  oldData   Json?    @map("old_data")
+  newData   Json?    @map("new_data")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  company Company? @relation(fields: [companyId], references: [id])
+  user    User?    @relation(fields: [userId], references: [id])
+
+  @@index([companyId, entity])
+  @@map("audit_logs")
+}

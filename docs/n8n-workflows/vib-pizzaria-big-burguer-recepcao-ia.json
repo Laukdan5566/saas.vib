@@ -1,0 +1,411 @@
+{
+  "id": "K2GVMhLFIkh70Egi",
+  "name": "Vib - Pizzaria Big Burguer - Recepcao IA",
+  "nodes": [
+    {
+      "id": "873fed52-9d7f-4da7-88fd-cc5e7b5e7753",
+      "name": "ACESSO / WEBHOOK",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "color": 5,
+        "width": 500,
+        "height": 420,
+        "content": "# ACESSO / WEBHOOK\nRecebe o webhook oficial do Ticketz e normaliza cliente, ticket e mensagem."
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "3e0904dd-6294-45b7-95b8-686492510b5a",
+      "name": "PROMPTS E DADOS BIG BURGUER",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        544,
+        0
+      ],
+      "parameters": {
+        "color": 4,
+        "width": 650,
+        "height": 420,
+        "content": "# PROMPTS E DADOS BIG BURGUER\nDados coletados, prompt da pizzaria e classificacao real da mensagem antes da IA."
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "7fe96725-f8b2-4929-b1a1-ddd374117120",
+      "name": "MIDIA E LOCALIZACAO",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1200,
+        0
+      ],
+      "parameters": {
+        "color": 7,
+        "width": 360,
+        "height": 420,
+        "content": "# MIDIA E LOCALIZACAO\nNormaliza midia, URL publica, tipo de conteudo e localizacao recebida no WhatsApp."
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "5cc72326-9fba-41f7-a50c-6e1c66951cf8",
+      "name": "MEMORIA / RASCUNHO",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1568,
+        0
+      ],
+      "parameters": {
+        "color": 4,
+        "width": 380,
+        "height": 420,
+        "content": "# MEMORIA / RASCUNHO\nGera chave isolada por empresa + ticket.\nO rascunho salvo no SaaS continua sendo a fonte da verdade."
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "828bebce-95d5-4cb8-8fa3-c851063f541b",
+      "name": "FERRAMENTAS SAAS / TICKETZ",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1936,
+        0
+      ],
+      "parameters": {
+        "color": 5,
+        "width": 380,
+        "height": 420,
+        "content": "# FERRAMENTAS SAAS / TICKETZ\nExplicita as ferramentas que o orquestrador usa de verdade: contexto, cardapio, rascunho, pedido, nota e Ticketz."
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "73a4dfcc-4955-4712-b0e0-4903506bb792",
+      "name": "IA E ACOES",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2320,
+        0
+      ],
+      "parameters": {
+        "color": 6,
+        "width": 380,
+        "height": 420,
+        "content": "# IA E ACOES\nExecuta atendimento, valida rascunho, calcula total e cria pedido no SaaS."
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "b64d7df4-bf0b-40d4-b886-56ee221db6d0",
+      "name": "RESPOSTA AO TICKETZ",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2704,
+        0
+      ],
+      "parameters": {
+        "color": 3,
+        "width": 360,
+        "height": 420,
+        "content": "# RESPOSTA AO TICKETZ\nSegmenta, valida e devolve o JSON final para o webhook do Ticketz."
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "db191d20-98b9-44b3-96ff-6d519b38c451",
+      "name": "Entrada Ticketz Recepcao",
+      "type": "n8n-nodes-base.webhook",
+      "position": [
+        144,
+        240
+      ],
+      "webhookId": "vib-recepcao-pizzaria-big-burguer",
+      "parameters": {
+        "path": "vib/recepcao/pizzaria-big-burguer/6/ticketz",
+        "options": {},
+        "httpMethod": "POST",
+        "responseMode": "lastNode"
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "f23c3bba-bc0b-4843-a4d2-c918e0eaf946",
+      "name": "Dados coletados",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        384,
+        240
+      ],
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst body = item.body || item;\nconst customer = body.metadata?.from || body.customer || {};\nconst content = String(body.content || body.text || body.message?.content || '').trim();\nconst messageType = String(body.type || body.metadata?.message?.mediaType || 'text').toLowerCase();\nreturn [{\n  json: {\n    ...item,\n    content,\n    messageType,\n    dados_coletados: {\n      ticket_id: body.ticket_id || body.metadata?.ticketId || body.metadata?.ticket_id,\n      contact_id: customer.id ? `contact_${customer.id}` : (customer.number || customer.phone || body.phone || ''),\n      customer_name: customer.name || customer.pushname || body.contact_name || body.name || 'Cliente',\n      customer_phone: customer.number || customer.phone || customer.whatsapp || body.phone || body.customer_phone || '',\n      backendUrl: body.metadata?.backendUrl || 'https://vib.correacloud.com.br/backend',\n      hasMedia: Boolean(body.mediaUrl || body.metadata?.message?.mediaUrl),\n      receivedAt: new Date().toISOString()\n    }\n  }\n}];"
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "2b06418f-1003-4b35-8d06-da72e441e996",
+      "name": "Prompts Big Burguer",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        640,
+        240
+      ],
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nreturn [{\n  json: {\n    ...item,\n    prompts_big_burguer: {\n      persona: 'Atendente virtual da Pizzaria Big Burguer no WhatsApp',\n      estilo: 'curto, natural, educado e acolhedor, uma pergunta por vez',\n      objetivo: 'montar pedido, confirmar total e enviar ao painel SaaS',\n      regraPrincipal: 'o rascunho salvo e a fonte da verdade; nunca repetir pergunta ja respondida; responda com gentileza sem textao',\n      etapas: ['item', 'bebida', 'entrega ou retirada', 'endereco se delivery', 'pagamento', 'resumo', 'confirmacao']\n    }\n  }\n}];"
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "455299aa-2ed5-47b9-a1fc-9834011c4f74",
+      "name": "Classifica conteudo",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        880,
+        240
+      ],
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst body = item.body || item;\nconst type = String(item.messageType || body.type || body.metadata?.message?.mediaType || 'text').toLowerCase();\nconst mediaUrl = body.mediaUrl || body.metadata?.message?.mediaUrl || '';\nconst content = String(item.content || body.content || body.text || '').trim();\nconst lower = content.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase();\nconst dmsRegex = new RegExp(\"maps\\\\.google|\\\\d{1,3}\\\\s*(?:\\\\u00B0|\\\\u00BA|\\\\?)\\\\s*\\\\d{1,2}['?]\");\nreturn [{\n  json: {\n    ...item,\n    roteamento_conteudo: {\n      type,\n      mediaUrl,\n      isText: type === 'text' && content.length > 0,\n      isAudio: type.includes('audio'),\n      isImage: type.includes('image'),\n      isDocument: type.includes('document') || /\\.pdf($|\\?)/i.test(mediaUrl),\n      isLocationLike: dmsRegex.test(content) || Boolean(body.location || body.metadata?.message?.dataJson?.message?.locationMessage),\n      wantsMenu: /cardapio|menu|sabores|opcoes/.test(lower),\n      wantsHuman: /humano|atendente|pessoa|falar com alguem/.test(lower)\n    }\n  }\n}];"
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "8151a248-0457-4b84-94c7-436d142a075c",
+      "name": "Processa midia/localizacao",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1216,
+        240
+      ],
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst body = item.body || item;\nconst backendUrl = String(body.metadata?.backendUrl || 'https://vib.correacloud.com.br/backend').replace(/\\/+$/, '');\nconst mediaUrl = body.mediaUrl || body.metadata?.message?.mediaUrl || '';\nconst absoluteMediaUrl = mediaUrl && String(mediaUrl).startsWith('http') ? mediaUrl : (mediaUrl ? `${backendUrl}/public/${mediaUrl}` : '');\nconst location = body.metadata?.message?.dataJson?.message?.locationMessage || body.message?.dataJson?.message?.locationMessage || body.location || null;\nreturn [{\n  json: {\n    ...item,\n    midia_processada: {\n      absoluteMediaUrl,\n      hasMedia: Boolean(absoluteMediaUrl),\n      mediaType: item.roteamento_conteudo?.type || 'text',\n      location\n    }\n  }\n}];"
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "489de5bd-0ced-4d23-bf3d-cbf31b35a756",
+      "name": "Configuracao env",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1344,
+        240
+      ],
+      "parameters": {
+        "options": {},
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cfg-body",
+              "name": "body",
+              "type": "object",
+              "value": "={{ $json.body || $json }}"
+            },
+            {
+              "id": "cfg-saas-base",
+              "name": "saasBase",
+              "type": "string",
+              "value": "={{ ($env.SAAS_API_URL || 'https://saas.correacloud.com.br/api').replace(/\\/+$/, '') }}"
+            },
+            {
+              "id": "cfg-secret",
+              "name": "secret",
+              "type": "string",
+              "value": "={{ $env.SAAS_WEBHOOK_SECRET || $env.WEBHOOK_SECRET || '' }}"
+            },
+            {
+              "id": "cfg-openai-key",
+              "name": "openAiKey",
+              "type": "string",
+              "value": "={{ $env.OPENAI_API_KEY || '' }}"
+            }
+          ]
+        }
+      },
+      "typeVersion": 3.4
+    },
+    {
+      "id": "4e6b7134-93ea-431e-a0b5-eae6c1cd5d5b",
+      "name": "Memoria por ticket",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1600,
+        240
+      ],
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst body = item.body || item;\nconst ticketId = item.dados_coletados?.ticket_id || body.ticket_id || body.metadata?.ticketId || body.metadata?.ticket_id || 'sem-ticket';\nconst companyId = '6d558f61-4f94-40aa-b96c-b8d6e8c38523';\nreturn [{\n  json: {\n    ...item,\n    memoria_operacional: {\n      companyId,\n      ticketId,\n      sessionKey: `company_${companyId}_ticket_${ticketId}`,\n      draftKey: String(ticketId).replace(/[^\\w.-]+/g, '_').slice(0, 80),\n      isolatedByTicket: true\n    }\n  }\n}];"
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "a75ece1c-5ac0-410e-ba2b-6fd85c559359",
+      "name": "Ferramentas SaaS/Ticketz",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1840,
+        240
+      ],
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nreturn [{\n  json: {\n    ...item,\n    ferramentas_operacionais: {\n      saas: {\n        context: '/integrations/restaurants/:companyId/context',\n        menu: '/integrations/restaurants/:companyId/menu',\n        drafts: '/integrations/restaurants/:companyId/drafts/:draftKey',\n        orders: '/integrations/restaurants/:companyId/orders',\n        notes: '/integrations/restaurants/:companyId/notes'\n      },\n      ticketz: {\n        sendOrNote: '/integrations/webhook'\n      },\n      enabledInOrchestrator: true\n    }\n  }\n}];"
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "bb2f164e-d49b-44e0-b7cb-6c46b724270d",
+      "name": "Orquestrador IA e acoes SaaS",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        2064,
+        240
+      ],
+      "parameters": {
+        "jsCode": "const config = $input.first().json;\nconst body = config.body || {};\nconst companyId = '6d558f61-4f94-40aa-b96c-b8d6e8c38523';\nconst publicMenuBase = 'https://saas.correacloud.com.br/cardapio/pizzaria-big-burguer';\nconst rawSaasBase = String(config.saasBase || 'https://saas.correacloud.com.br/api').replace(/\\/+$/, '');\nconst saasBase = rawSaasBase.endsWith('/api') ? rawSaasBase : `${rawSaasBase}/api`;\nconst secret = String(config.secret || '');\nconst customer = body.metadata?.from || body.customer || {};\nconst text = String(body.content || body.text || body.message?.content || '').trim();\n\nconst httpRequest = this.helpers.httpRequest.bind(this.helpers);\n\nfunction normalize(value) {\n  return String(value || '')\n    .normalize('NFD')\n    .replace(/[\\u0300-\\u036f]/g, '')\n    .toLowerCase();\n}\n\nfunction cleanPhone(value) {\n  return String(value || '').replace(/\\D/g, '');\n}\n\nfunction customerName() {\n  const name = String(customer.name || customer.pushname || body.contact_name || body.name || '').trim();\n  if (!name || normalize(name) === 'cliente') return '';\n  return name;\n}\n\nfunction customerPhone() {\n  return cleanPhone(customer.number || customer.phone || customer.whatsapp || body.phone || body.customer_phone || '');\n}\n\nfunction buildMenuLink(extra = {}) {\n  const params = [];\n  const name = customerName();\n  const phone = customerPhone();\n  if (name) params.push(['name', name]);\n  if (phone) params.push(['phone', phone]);\n  for (const [key, value] of Object.entries(extra)) {\n    if (value !== undefined && value !== null && String(value).trim() !== '') {\n      params.push([key, String(value)]);\n    }\n  }\n  const qs = params\n    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)\n    .join('&');\n  return qs ? `${publicMenuBase}?${qs}` : publicMenuBase;\n}\n\nasync function loadContext() {\n  try {\n    return await httpRequest({\n      method: 'GET',\n      url: `${saasBase}/integrations/restaurants/${companyId}/context`,\n      headers: { 'x-webhook-secret': secret },\n      json: true,\n      timeout: 8000\n    });\n  } catch (error) {\n    return { company: { acceptOrders: true, deliveryFeeDefault: 4, preparationTimeMinutes: 35 }, contextError: error.message };\n  }\n}\n\nfunction firstName() {\n  return customerName().split(/\\s+/).filter(Boolean)[0] || '';\n}\n\nfunction greeting() {\n  const name = firstName();\n  return name ? `Oi, ${name}!` : 'Oi!';\n}\n\nfunction orderMessage(company) {\n  const link = buildMenuLink();\n  return [\n    `${greeting()} Para fazer seu pedido, acesse nosso cardapio:`,\n    link,\n    '',\n    'Por la voce escolhe pizzas, sabores, bebidas, entrega/retirada e pagamento.',\n    'Assim que enviar, a loja recebe no painel e confirma por aqui.'\n  ].join(String.fromCharCode(10));\n}\n\nfunction statusMessage() {\n  const link = buildMenuLink({ view: 'orders' });\n  return [\n    `${greeting()} Para acompanhar seus pedidos, acesse:`,\n    link,\n    '',\n    'Use o mesmo WhatsApp que informou no pedido.'\n  ].join(String.fromCharCode(10));\n}\n\nfunction isWithinBusinessHours(contextPayload) {\n  const source = contextPayload.context || contextPayload;\n  const timezone = source.settings?.timezone || 'America/Sao_Paulo';\n  const parts = new Intl.DateTimeFormat('en-US', {\n    timeZone: timezone,\n    weekday: 'short',\n    hour: '2-digit',\n    minute: '2-digit',\n    hourCycle: 'h23'\n  })\n    .formatToParts(new Date())\n    .reduce((acc, part) => ({ ...acc, [part.type]: part.value }), {});\n  const weekMap = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };\n  const dayOfWeek = weekMap[parts.weekday] ?? new Date().getDay();\n  const currentTime = `${parts.hour || '00'}:${parts.minute || '00'}`;\n  const todaysHours = (source.businessHours || []).find(hour =>\n    Number(hour.dayOfWeek) === dayOfWeek && String(hour.type || 'normal') === 'normal'\n  );\n  return Boolean(\n    todaysHours &&\n    !todaysHours.isClosed &&\n    todaysHours.openTime &&\n    todaysHours.closeTime &&\n    currentTime >= todaysHours.openTime &&\n    currentTime <= todaysHours.closeTime\n  );\n}\n\nfunction closedMessage() {\n  return [\n    `${greeting()} No momento ainda nao estamos funcionando.`,\n    '',\n    'Horario de funcionamento:',\n    'Quinta-feira: 18:00 as 22:30',\n    'Sexta-feira: 18:00 as 22:30',\n    'Sabado: 18:00 as 23:00',\n    'Domingo: 18:00 as 23:00'\n  ].join('\\n');\n}\n\nfunction humanMessage(company) {\n  return [\n    `${greeting()} Vou chamar alguem da loja para te ajudar.`,\n    company?.acceptOrders === false\n      ? 'A loja esta fechada para novos pedidos no momento.'\n      : `Se quiser adiantar o pedido, o cardapio esta aqui: ${buildMenuLink()}`\n  ].join(String.fromCharCode(10));\n}\n\nconst context = await loadContext();\nconst company = context.company || {};\nconst normalized = normalize(text);\nconst incomingType = String(body.type || body.metadata?.message?.mediaType || 'text').toLowerCase();\n\nconst wantsHuman = /\\b(humano|atendente|pessoa|falar com alguem|falar com atendente|suporte)\\b/.test(normalized);\nconst wantsStatus = /\\b(cade|cadê|status|acompanhar|andamento|meu pedido|pedido chegou|saiu|saiu pra entrega|saiu para entrega|demora|previsao|previsão|pronto)\\b/.test(normalized);\nconst isMedia = incomingType.includes('audio') || incomingType.includes('image') || incomingType.includes('document') || Boolean(body.mediaUrl || body.metadata?.message?.mediaUrl);\n\nlet responseText;\nlet note;\n\nif (wantsHuman) {\n  responseText = humanMessage(company);\n  note = `Cliente pediu atendimento humano. Mensagem: ${text || incomingType}`;\n} else if (company.acceptOrders === false || !isWithinBusinessHours(context)) {\n  responseText = closedMessage();\n} else if (wantsStatus) {\n  responseText = statusMessage();\n} else if (isMedia) {\n  responseText = `${greeting()} recebi sua midia. Para pedido, use o cardapio: ${buildMenuLink()}\\nSe quiser falar com a loja, responda: atendente.`;\n} else {\n  responseText = orderMessage(company);\n}\n\nconst output = [{\n  type: 'message',\n  text: responseText,\n  ...(note ? { note } : {})\n}];\n\nreturn [{\n  json: {\n    output,\n    actionResults: [],\n    mode: 'public_checkout_link',\n    publicMenuUrl: buildMenuLink(),\n    statusUrl: buildMenuLink({ view: 'orders' }),\n    storeOpen: company.acceptOrders !== false && isWithinBusinessHours(context)\n  }\n}];\n"
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "63705713-35a9-4b1d-b764-c19c4cb1ba2d",
+      "name": "Segmenta resposta Ticketz",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        2336,
+        240
+      ],
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst output = Array.isArray(item.output) ? item.output : [];\nreturn [{ json: { ...item, output } }];"
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "a2d433d4-4098-488a-a2d3-a74200b7a5cb",
+      "name": "Valida resposta final",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        2576,
+        240
+      ],
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nlet output = Array.isArray(item.output) ? item.output : [];\nif (!output.length) {\n  output = [{ type: 'message', text: 'Recebi sua mensagem. Vou seguir com seu atendimento por aqui.' }];\n}\nreturn [{ json: { ...item, output } }];"
+      },
+      "typeVersion": 2
+    }
+  ],
+  "active": true,
+  "settings": {
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "executionOrder": "v1"
+  },
+  "connections": {
+    "Dados coletados": {
+      "main": [
+        [
+          {
+            "node": "Prompts Big Burguer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Configuracao env": {
+      "main": [
+        [
+          {
+            "node": "Memoria por ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Memoria por ticket": {
+      "main": [
+        [
+          {
+            "node": "Ferramentas SaaS/Ticketz",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classifica conteudo": {
+      "main": [
+        [
+          {
+            "node": "Processa midia/localizacao",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prompts Big Burguer": {
+      "main": [
+        [
+          {
+            "node": "Classifica conteudo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Entrada Ticketz Recepcao": {
+      "main": [
+        [
+          {
+            "node": "Dados coletados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ferramentas SaaS/Ticketz": {
+      "main": [
+        [
+          {
+            "node": "Orquestrador IA e acoes SaaS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Segmenta resposta Ticketz": {
+      "main": [
+        [
+          {
+            "node": "Valida resposta final",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Processa midia/localizacao": {
+      "main": [
+        [
+          {
+            "node": "Configuracao env",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Orquestrador IA e acoes SaaS": {
+      "main": [
+        [
+          {
+            "node": "Segmenta resposta Ticketz",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

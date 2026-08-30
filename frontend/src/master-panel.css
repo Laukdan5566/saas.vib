@@ -1,0 +1,63 @@
+/* Isolated presentation for the super-admin platform workspace. */
+.masterShell { min-height: 100vh; display: grid; grid-template-columns: 248px minmax(0, 1fr); background: #edf3f7; color: #152536; }
+.masterSidebar { min-height: 100vh; display: flex; flex-direction: column; gap: 28px; padding: 22px 16px; background: #102d41; color: #eaf5fc; }
+.masterBrand { display: flex; align-items: center; gap: 11px; min-width: 0; }
+.masterBrand .mark { width: 44px; height: 44px; flex: 0 0 auto; border-radius: 8px; background: #168779; color: #ffffff; }
+.masterBrand div { min-width: 0; display: grid; gap: 2px; }
+.masterBrand strong { color: #ffffff; font-size: 16px; }
+.masterBrand span:not(.mark) { color: #b7d6e7; font-size: 13px; }
+.masterSidebar nav { display: grid; gap: 6px; }
+.masterSidebar nav button, .masterLogout { min-height: 44px; display: flex; align-items: center; gap: 10px; width: 100%; border-radius: 7px; padding: 0 12px; background: transparent; color: #dbeef8; text-align: left; font-weight: 800; }
+.masterSidebar nav button svg, .masterLogout svg { width: 19px; height: 19px; flex: 0 0 auto; }
+.masterSidebar nav button:hover, .masterSidebar nav button.active { background: #1b796f; color: #ffffff; }
+.masterLogout { margin-top: auto; background: rgba(255, 255, 255, 0.1); }
+.masterLogout:hover { background: rgba(255, 255, 255, 0.18); }
+.masterMain { min-width: 0; padding: 30px clamp(20px, 3vw, 48px) 48px; }
+.masterTopbar, .masterSectionHeader, .masterCompanyTitle, .masterCompanyCard footer { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+.masterTopbar { margin-bottom: 26px; }
+.masterTopbar > div, .masterSectionHeader > div { display: grid; gap: 6px; }
+.masterTopbar span { color: #637482; font-size: 12px; font-weight: 800; text-transform: uppercase; }
+.masterTopbar h1, .masterSectionHeader h2 { margin: 0; color: #152536; }
+.masterTopbar h1 { font-size: 32px; }
+.masterTopbar label { width: min(360px, 100%); color: #566875; }
+.masterTopbar select { margin-top: 2px; background: #ffffff; }
+.masterMetrics { grid-template-columns: repeat(4, minmax(0, 1fr)); margin-bottom: 30px; }
+.masterMetrics article { min-height: 114px; display: grid; align-content: center; gap: 8px; padding: 18px; border: 1px solid #d9e4eb; border-radius: 8px; background: #ffffff; box-shadow: 0 10px 22px rgba(24, 54, 72, 0.06); }
+.masterMetrics span, .masterCompanyCard dt, .masterCompanyTitle span { color: #637482; }
+.masterMetrics strong { color: #0d3045; font-size: 26px; }
+.masterCompanies { display: grid; gap: 20px; }
+.masterSectionHeader { align-items: flex-end; }
+.masterSectionHeader p { max-width: 760px; margin: 0; color: #566875; }
+.primaryInlineButton { min-height: 42px; display: inline-flex; align-items: center; gap: 8px; flex: 0 0 auto; border-radius: 7px; padding: 0 15px; background: #0c718e; color: #ffffff; font-weight: 800; }
+.primaryInlineButton:hover { background: #075d78; }
+.primaryInlineButton svg { width: 18px; height: 18px; }
+.masterCompanyGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(285px, 1fr)); gap: 16px; }
+.masterCompanyCard { min-width: 0; min-height: 252px; display: grid; align-content: space-between; gap: 20px; overflow: hidden; padding: 18px; border: 1px solid #d9e4eb; border-radius: 8px; background: #ffffff; box-shadow: 0 10px 22px rgba(24, 54, 72, 0.06); }
+.masterCompanyTitle { justify-content: flex-start; }
+.masterCompanyTitle > img, .masterCompanyTitle > .companyAvatar { width: 46px; height: 46px; flex: 0 0 46px; overflow: hidden; border-radius: 8px; object-fit: cover; }
+.masterCompanyTitle > div { min-width: 0; display: grid; gap: 4px; }
+.masterCompanyTitle strong, .masterCompanyTitle span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.masterCompanyCard dl { display: grid; gap: 10px; margin: 0; }
+.masterCompanyCard dl > div { display: flex; justify-content: space-between; gap: 12px; padding-bottom: 10px; border-bottom: 1px solid #edf1f4; }
+.masterCompanyCard dt, .masterCompanyCard dd { margin: 0; }
+.masterCompanyCard dd { color: #18364a; font-weight: 800; text-align: right; }
+.masterCompanyCard footer { align-items: stretch; flex-wrap: wrap; justify-content: flex-start; gap: 8px; }
+.masterCompanyCard footer button { min-height: 36px; flex: 1 1 92px; border-radius: 6px; padding: 7px 10px; background: #eaf2f6; color: #155775; font-size: 12px; font-weight: 800; }
+.masterCompanyCard footer button:last-child { flex-basis: 150px; background: #0c718e; color: #ffffff; }
+.masterCompanyEditor { margin-top: 4px; border-radius: 8px; }
+
+@media (max-width: 1100px) { .masterMetrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 760px) {
+  .masterShell { grid-template-columns: 1fr; }
+  .masterSidebar { min-height: 0; gap: 16px; padding: 16px; }
+  .masterSidebar nav { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .masterSidebar nav button { justify-content: center; padding: 0 8px; font-size: 12px; }
+  .masterSidebar nav button svg { display: none; }
+  .masterLogout { margin-top: 0; }
+  .masterMain { padding: 22px 14px 34px; }
+  .masterTopbar, .masterSectionHeader { align-items: stretch; flex-direction: column; }
+  .masterTopbar label, .primaryInlineButton { width: 100%; }
+  .masterMetrics { grid-template-columns: 1fr 1fr; }
+  .masterMetrics article { min-height: 92px; padding: 14px; }
+  .masterMetrics strong { font-size: 22px; }
+}

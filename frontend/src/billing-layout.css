@@ -1,0 +1,123 @@
+.billingInvoices {
+  overflow: hidden;
+}
+
+.billingInvoiceRow {
+  display: grid;
+  grid-template-columns: minmax(190px, 1.25fr) minmax(100px, 0.6fr) minmax(190px, 1.15fr) minmax(130px, 0.8fr) minmax(132px, 0.65fr) minmax(148px, 0.8fr);
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  margin-top: 12px;
+  border: 1px solid #d8e2ec;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.billingInvoiceSummary,
+.billingInvoiceValue,
+.pixCopyField,
+.billingInvoiceLinks,
+.financialOrderActions {
+  min-width: 0;
+}
+
+.billingInvoiceSummary,
+.billingInvoiceValue {
+  display: grid;
+  gap: 4px;
+}
+
+.billingInvoiceSummary span,
+.billingInvoiceValue span,
+.pixCopyField {
+  color: #58708a;
+  font-size: 14px;
+}
+
+.pixCopyField {
+  display: grid;
+  gap: 6px;
+  font-weight: 700;
+}
+
+.pixCopyField textarea {
+  width: 100%;
+  min-height: 72px;
+  resize: vertical;
+  overflow-wrap: anywhere;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.3;
+}
+
+.pixQrImage,
+.pixQrPlaceholder {
+  width: 140px;
+  height: 140px;
+  max-width: 100%;
+  justify-self: center;
+  object-fit: contain;
+  border: 1px solid #d8e2ec;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+.pixQrImage {
+  padding: 6px;
+}
+
+.billingInvoiceLinks,
+.billingInvoiceLinks a,
+.billingInvoiceRow .financialOrderActions {
+  display: grid;
+  gap: 8px;
+}
+
+.billingInvoiceLinks a {
+  min-height: 38px;
+  align-items: center;
+  padding: 8px 12px;
+  border: 1px solid #c8d9e8;
+  border-radius: 8px;
+  color: #0b6c9d;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.billingInvoiceRow .financialOrderActions {
+  justify-content: stretch;
+}
+
+.billingInvoiceRow .financialOrderActions button {
+  width: 100%;
+}
+
+@media (max-width: 1280px) {
+  .billingInvoiceRow {
+    grid-template-columns: minmax(180px, 1fr) minmax(100px, 0.55fr) minmax(180px, 1fr) minmax(130px, 0.7fr);
+  }
+
+  .billingInvoiceLinks,
+  .billingInvoiceRow .financialOrderActions {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 760px) {
+  .billingInvoiceRow {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .pixCopyField,
+  .billingInvoiceLinks,
+  .billingInvoiceRow .financialOrderActions {
+    grid-column: 1 / -1;
+  }
+
+  .pixQrImage,
+  .pixQrPlaceholder {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}

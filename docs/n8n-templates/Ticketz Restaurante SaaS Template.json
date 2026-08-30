@@ -1,0 +1,2137 @@
+{
+  "name": "Ticketz Restaurante SaaS Template",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ticketz-restaurante-saas",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -2176,
+        272
+      ],
+      "id": "996ed5e9-6da6-40ce-ae24-a22f5a63ed7a",
+      "name": "Webhook",
+      "webhookId": "e93fe9f2-7915-487e-99cf-a421ac682039"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "==Mensagem do cliente:\n{{ $json.content?.trim() || \"\" }}\n\nDados internos do atendimento:\ncompany_id: {{ $json.company_id }}\ncompany_name: {{ $json.company_name }}\nticket_id: {{ $json.ticket_id }}\nticketz_ticket_id: {{ $json.ticketz_ticket_id }}\ncustomer_name: {{ $json.customer_name }}\ncustomer_phone: {{ $json.customer_phone }}\n",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=FORMATO DE SAIDA\n================\n\nResponda sempre usando um objeto JSON com a propriedade \"output\".\n\nFormato correto:\n{\n  \"output\": [\n    { \"type\": \"message\", \"text\": \"texto da mensagem\" }\n  ]\n}\n\nMensagem ao cliente:\n{ \"type\": \"message\", \"text\": \"texto\" }\n\nComando do sistema:\n{ \"type\": \"command\", \"data\": { } }\n\nNunca responda com array direto.\nNunca responda fora desse formato.\n\nFUNCAO\n======\n\nVoce e a atendente virtual de uma empresa alimenticia dentro do SaaS multi-tenant.\nAtenda pelo WhatsApp, ajude o cliente a escolher, monte o pedido e crie o pedido no SaaS apenas depois de confirmacao clara.\n\nFERRAMENTAS DISPONIVEIS\n=======================\n\n1. consultar_contexto_saas\nUse para obter regras da empresa, horarios, formas de pagamento e dados gerais.\n\n2. consultar_cardapio_saas\nUse antes de informar produtos, sabores, adicionais, disponibilidade ou precos.\n\n3. criar_pedido_saas\nUse somente depois que o cliente confirmar o pedido completo.\nEnvie itemsJson como um array JSON com objetos neste formato:\n[\n  {\n    \"productId\": \"id do produto/tamanho\",\n    \"quantity\": 1,\n    \"addonIds\": [\"id do sabor 1\", \"id do sabor 2\"],\n    \"notes\": \"observacao do item\"\n  }\n]\n\nPara pizza, addonIds deve conter de 1 a 2 sabores, conforme o grupo exigido. O SaaS valida limites e calcula o maior valor.\n\n4. registrar_evento_saas\nUse para registrar erros, pedido incompleto ou necessidade de humano.\n\nREGRAS DE CONVERSA\n==================\n\n- Seja direto, cordial e simples.\n- Nao invente informacao.\n- Nao mostre IDs internos ao cliente.\n- Se faltar informacao, pergunte somente o proximo dado necessario.\n- Para delivery, colete endereco completo: rua, numero, bairro, complemento ou referencia.\n- Para retirada, confirme nome e telefone.\n- Depois de criar o pedido, diga que ele entrou para confirmacao da loja.\n- Se a loja estiver fechada ou o SaaS recusar pedido, explique com calma e ofereca atendimento humano.\n"
+        }
+      },
+      "id": "93471e52-ef43-492a-b920-2cc806409a4e",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        -1008,
+        368
+      ],
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolCalculator",
+      "typeVersion": 1,
+      "position": [
+        -384,
+        288
+      ],
+      "id": "b1de52d7-5028-4892-8ec2-6bea7132a9ae",
+      "name": "Calculator"
+    },
+    {
+      "parameters": {
+        "tableName": "n8n_vectors_manual",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
+      "typeVersion": 1.1,
+      "position": [
+        -48,
+        864
+      ],
+      "id": "d3abe9be-5111-426d-a716-1af2feaac18c",
+      "name": "Postgres PGVector Store",
+      "credentials": {
+        "postgres": {
+          "id": "64X1GuLtZWWHr4xl",
+          "name": "Postgres account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        288,
+        864
+      ],
+      "id": "657a948e-331d-4796-81cd-60c36f4bcb7f",
+      "name": "OpenAI Chat Model1",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "text": "={{ $('Prompts').item.json.image_prompt }}",
+        "inputType": "=data",
+        "options": {}
+      },
+      "id": "3ccb537e-ca56-45fc-86d1-1a88716bb44f",
+      "name": "Analisa Imagem",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.4,
+      "position": [
+        -1728,
+        688
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "HhHOHsWZ55qAiD2d",
+          "name": "OpenAI account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d5c825da-007b-4b4e-88e8-0f8a1210335c",
+              "leftValue": "={{ ($json.content?.trim() || $json.text?.trim())?.length > 0 || !!$('Extract document information').item.json.message.content }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1232,
+        528
+      ],
+      "id": "e95fdc40-1423-4c10-994d-b0bf191e5bae",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d5c825da-007b-4b4e-88e8-0f8a1210335c",
+              "leftValue": "={{ \n\n[\"text\"].includes($json.messageType)\n\n&& !!$('Dados coletados').item.json.content.trim()\n\n}}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1248,
+        272
+      ],
+      "id": "187dfcbe-f6ca-4e6d-a4bc-58a9fbbbbcdd",
+      "name": "Test content"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7538fcec-c9a7-4a8f-af57-10b4622dbf6f",
+              "leftValue": "={{ $('Webhook').item.json.body.mediaUrl }}",
+              "rightValue": "^https?://",
+              "operator": {
+                "type": "string",
+                "operation": "regex"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2400,
+        800
+      ],
+      "id": "78c48cbb-16e8-4553-8d71-073bc85fbaf2",
+      "name": "Test media file"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "=[{\n  \"type\": \"text\",\n  \"content\": \"Não consigo entender esse tipo de arquivo.\"\n}]",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -1760,
+        1392
+      ],
+      "id": "6d5ce5ea-1578-4fd9-a9bd-1e804f63e4ba",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "=[{\n  \"type\": \"text\",\n  \"content\": \"Não consegui analisar, tente novamente por favor.\"\n}]",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -1200,
+        1376
+      ],
+      "id": "45f90421-33fe-47d9-8e12-d11008b2dc07",
+      "name": "Respond to Webhook2"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "=[{\n  \"type\": \"text\",\n  \"content\": \"Não consigo analisar esse tipo de mensagem.\"\n}]",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -2048,
+        1392
+      ],
+      "id": "6ae8bdbf-0c98-4cbb-93eb-3941ccd28933",
+      "name": "Respond to Webhook3"
+    },
+    {
+      "parameters": {
+        "content": "# Finalizações sem sucesso",
+        "height": 280,
+        "width": 1104,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2144,
+        1296
+      ],
+      "id": "2d6e99b4-2c9d-43e0-8b62-d7d77b39dd79",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "# Defina aqui os prompts",
+        "height": 280,
+        "width": 420,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1952,
+        160
+      ],
+      "id": "f9e6810b-78b5-49f1-9e87-dc3474fff369",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6fdbc6b7-cf6a-48ca-bd2f-7c8a224522fd",
+              "name": "content",
+              "value": "={{ $(\"Webhook\").item.json.body.message?.content || $(\"Webhook\").item.json.body.content || $(\"Webhook\").item.json.body.text || \"\" }}",
+              "type": "string"
+            },
+            {
+              "id": "a3b0c3e2-c7ae-47ec-9d9d-7de00c726d43",
+              "name": "messageType",
+              "value": "={{ $(\"Webhook\").item.json.body.message?.type || $(\"Webhook\").item.json.body.type || \"text\" }}",
+              "type": "string"
+            },
+            {
+              "id": "57cd7f72-4fe7-40e2-b4c2-742acc4090a0",
+              "name": "company_id",
+              "value": "={{ $(\"Webhook\").item.json.body.company?.id || $(\"Webhook\").item.json.body.company_id || \"\" }}",
+              "type": "string"
+            },
+            {
+              "id": "93ade9a6-59d3-4298-9e03-2cc48df689e9",
+              "name": "company_name",
+              "value": "={{ $(\"Webhook\").item.json.body.company?.name || \"Empresa\" }}",
+              "type": "string"
+            },
+            {
+              "id": "82b439d3-f158-49e9-8fa4-e79fbc3b09cf",
+              "name": "ticket_id",
+              "value": "={{ $(\"Webhook\").item.json.body.ticket?.id || $(\"Webhook\").item.json.body.ticket_id || \"\" }}",
+              "type": "string"
+            },
+            {
+              "id": "7c071204-6134-44d0-a4b9-2cc7871ced66",
+              "name": "ticketz_ticket_id",
+              "value": "={{ $(\"Webhook\").item.json.body.ticket?.ticketzTicketId || $(\"Webhook\").item.json.body.raw?.ticket?.id || $(\"Webhook\").item.json.body.ticketzTicketId || \"\" }}",
+              "type": "string"
+            },
+            {
+              "id": "b6809dde-6ca9-4d28-b30a-eb3114b5e05d",
+              "name": "customer_name",
+              "value": "={{ $(\"Webhook\").item.json.body.customer?.name || $(\"Webhook\").item.json.body.customerName || \"Cliente WhatsApp\" }}",
+              "type": "string"
+            },
+            {
+              "id": "72a247e1-99ec-441c-8b1f-8b3790424e16",
+              "name": "customer_phone",
+              "value": "={{ $(\"Webhook\").item.json.body.customer?.phone || $(\"Webhook\").item.json.body.customerPhone || \"\" }}",
+              "type": "string"
+            },
+            {
+              "id": "74e04ec1-3a89-4056-8de0-7f4e363815b0",
+              "name": "saas_api_url",
+              "value": "={{ $env.SAAS_API_URL || \"http://backend:3101\" }}",
+              "type": "string"
+            },
+            {
+              "id": "4ccf96b3-74aa-49c7-b596-7cb6c1a5d4cb",
+              "name": "webhook_secret",
+              "value": "={{ $env.SAAS_WEBHOOK_SECRET || \"\" }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f404b48b-a663-445e-a000-2a632a2857e9",
+      "name": "Dados coletados",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1424,
+        272
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "481dc1bb-2786-477c-915f-268d82a45102",
+              "name": "image_prompt",
+              "value": "transcrever a imagem tentando detectar o significado de documentos fornecidos. Se não parecer com um documento declinar da transcrição.",
+              "type": "string"
+            },
+            {
+              "id": "8c6d4aa3-f412-4c68-ad30-6b37483d248f",
+              "name": "assistant_prompt",
+              "value": "=Voc? ? a atendente virtual da {{ $('Dados coletados').item.json.company_name }}.\n\nObjetivo: atender clientes pelo WhatsApp, explicar card?pio, montar pedidos de delivery ou retirada, confirmar dados e criar o pedido no SaaS quando o cliente confirmar.\n\nRegras:\n- Responda de forma curta, natural e educada.\n- Fa?a uma pergunta por vez sempre que poss?vel.\n- Nunca invente pre?o, sabor, tamanho, taxa, hor?rio ou disponibilidade.\n- Consulte o card?pio antes de informar pre?os ou montar pedido.\n- Para pizza, permita de 1 a 2 sabores quando o produto exigir grupo de sabores; se forem 2 sabores, o SaaS calcula o maior valor.\n- Antes de criar pedido, confirme: itens, sabores, observa??es, entrega/retirada, nome, telefone, endere?o se delivery, forma de pagamento e total estimado.\n- Crie o pedido somente quando o cliente confirmar.\n- Depois de criar, informe que o pedido foi recebido e est? aguardando confirma??o da loja.\n- Se o cliente pedir atendente humano, solicite transfer?ncia/fila humana em vez de insistir no rob?.\n",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6f59ea5c-d151-47f9-b9e4-c23b72433e2d",
+      "name": "Prompts",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1792,
+        272
+      ]
+    },
+    {
+      "parameters": {
+        "content": "# Resposta da IA",
+        "height": 280,
+        "width": 340
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1008,
+        1296
+      ],
+      "id": "a5fd1560-4ebd-49d8-bd2b-a009df7eaa31",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{\n$json.output.map((element, index, array) => {\n    if (element.type===(\"command\")) {\n       return element.data\n    }\n\n    if (element.type === \"message\") {\n      const result = {\n        type: \"text\",\n        content: element.text\n      };\n      if (index < array.length - 1) {\n        result.trigger = {\n          action: \"wait\",\n            seconds: 3\n        };\n      }\n      return result;\n    }\n  })\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -880,
+        1376
+      ],
+      "id": "31498afc-5860-4bbb-a53a-2aa36346c26b",
+      "name": "Segmenta e responde"
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Webhook').item.json.body.mediaUrl }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -2128,
+        640
+      ],
+      "id": "0b7f60dc-8990-4176-8e57-784e0930836c",
+      "name": "Baixa arquivo"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.messageType }}",
+                    "rightValue": "audio",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "9a97b6ff-4106-4311-8633-2bdb779694b5"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "03190a4b-eaed-4848-a9ab-8e614ba3fa69",
+                    "leftValue": "={{ $json.messageType }}",
+                    "rightValue": "image",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "d4dbff8c-99e2-4798-b08c-7b2021071ba6",
+                    "leftValue": "={{  $('Baixa arquivo').item.binary.data.mimeType }}",
+                    "rightValue": "application/pdf",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "60c02c12-6eed-4250-a757-c004ee11b5d3",
+                    "leftValue": "={{ true }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -1952,
+        640
+      ],
+      "id": "a2fa2320-2a69-4a96-b196-046494926d81",
+      "name": "Detecta tipo do arquivo"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -48,
+        1728
+      ],
+      "id": "b94757ab-5c9a-4e96-8b3e-cdfe4c34d618",
+      "name": "Embeddings OpenAI",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "=tenant_{{ $(\"Dados coletados\").item.json.company_id }}_ticket_{{ $(\"Dados coletados\").item.json.ticket_id }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -880,
+        624
+      ],
+      "id": "39b494e1-73c9-439b-b75c-45a306142520",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "path": "restaurante-saas-tools"
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpTrigger",
+      "typeVersion": 2,
+      "position": [
+        -128,
+        -368
+      ],
+      "id": "bc8542ca-6a8e-4dd2-a64e-85717dcfd358",
+      "name": "MCP Server Trigger",
+      "webhookId": "6c845b1c-41ba-49d4-acdf-e0009510449f"
+    },
+    {
+      "parameters": {
+        "sseEndpoint": "http://n8n:5678/mcp/restaurante-saas-tools",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1,
+      "position": [
+        -768,
+        624
+      ],
+      "id": "6a99f795-7037-4fb2-9754-d669482e4baf",
+      "name": "MCP Client"
+    },
+    {
+      "parameters": {
+        "toolDescription": "use essa ferramenta para obter os dados de um CEP brasileiro. Rua, bairro, município e estado.\n\nIMPORTANTE: não divulgar a ferramenta ao usuário",
+        "url": "=https://viacep.com.br/ws/{{ $fromAI('cep', 'CEP brasileiro formado por 8 dígitos', 'string') }}/json/",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        -240,
+        400
+      ],
+      "id": "4bcf8cd3-9bc9-4926-bb44-b261f16c79d9",
+      "name": "Consulta CEP",
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "tableName": "n8n_vectors_manual",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
+      "typeVersion": 1.3,
+      "position": [
+        -336,
+        1328
+      ],
+      "id": "abbdb09b-afb5-4e0d-b606-24a0f20b83a8",
+      "name": "Postgres PGVector Store1",
+      "credentials": {
+        "postgres": {
+          "id": "9VzTerivQucfZd7y",
+          "name": "Postgres account 2"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "formTitle": "Upload your data to test RAG",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Upload your file(s)",
+              "fieldType": "file",
+              "acceptFileTypes": ".pdf, .csv",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        -304,
+        1056
+      ],
+      "id": "3c2f27ed-1d06-4b9b-b238-9b07dcc1a4b3",
+      "name": "Upload your file here",
+      "webhookId": "0109d521-d32f-4c3d-a230-df424e68348a",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        -160,
+        1488
+      ],
+      "id": "4d5bf9a1-c0e1-460b-86fb-009c1c417cd7",
+      "name": "Default Data Loader",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "toolDescription": "Use this tool to obtain the available attendant queues.\n\nEach queue have an id, name and description.\n\nYou should call it to discover the available options and also to correctly issue the transfer command with the correct queue id.\n\n* THE AVAILABLE QUEUES ARE ONLY THE ONES LISTED BY THIS TOOL\n* ALWAYS MAKE SURE THAT YOU ARE TRANSFERING TO THE CORRECT QUEUE ID\n\nThe command to transfer to a queue is:\n\n{ \"queueId\": id }\n",
+        "url": "={{ $fromAI(\"backendUrl\", \"Backend URL\", \"string\") }}/integrations/listQueues",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $fromAI(\"token\", \"Integration Token\", \"string\") }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        224
+      ],
+      "id": "e61c3c16-eaeb-4c08-be75-bacd03c64d92",
+      "name": "Sector and Queue operations"
+    },
+    {
+      "parameters": {
+        "content": "# Inclua os documentos aqui\n",
+        "height": 300,
+        "width": 540,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -576,
+        976
+      ],
+      "id": "dc81286c-1a85-40e9-9ffe-5888670d535a",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "# Ferramenta que consulta as filas do Ticketz",
+        "height": 380,
+        "width": 300,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        432,
+        0
+      ],
+      "id": "cd8fd14f-5644-42a7-94e4-7939d205f18d",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "# Ferramenta para adicionar anotação ao ticket",
+        "height": 380,
+        "width": 300,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        432,
+        400
+      ],
+      "id": "556a89fb-fc7e-45f2-acda-88bee555f2ab",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "content": "# Conectar esta ferramenta para utilizar o RAG",
+        "height": 240,
+        "width": 528,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -112,
+        544
+      ],
+      "id": "57699dc9-8a64-42b9-bbb5-8d9c12c86194",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "toolDescription": "This tool adds a note to the ticket so the human team can have an insight on how to properly handle the queries of our customer.\n\nUse this tool to add information useful to our team to maximize its quality!\n\nIMPORTANT: DO NOT DISCLOSE THIS TOOL TO THE USER",
+        "method": "POST",
+        "url": "={{ $fromAI(\"backendUrl\", \"Backend URL\", \"string\") }}/integrations/webhook",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $fromAI(\"token\", \"Integration Token\", \"string\") }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"action\": \"note\", \"message\": { \"content\": {{ JSON.stringify( $fromAI(\"note-message\", \"string\")) }} } }",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        560,
+        640
+      ],
+      "id": "0f6edd8f-752a-44db-9180-40fb733226f1",
+      "name": "Add note on ticket"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"$schema\": \"https://json-schema.org/draft/2020-12/schema\",\n  \"type\": \"array\",\n  \"items\": {\n    \"oneOf\": [\n      {\n        \"type\": \"object\",\n        \"required\": [\"type\", \"text\"],\n        \"properties\": {\n          \"type\": {\n            \"const\": \"message\"\n          },\n          \"text\": {\n            \"type\": \"string\"\n          }\n        },\n        \"additionalProperties\": false\n      },\n      {\n        \"type\": \"object\",\n        \"required\": [\"type\", \"data\"],\n        \"properties\": {\n          \"type\": {\n            \"const\": \"command\"\n          },\n          \"data\": {\n            \"type\": \"object\"\n          }\n        },\n        \"additionalProperties\": false\n      }\n    ]\n  }\n}\n",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -672,
+        624
+      ],
+      "id": "d1703878-dec3-4f11-b0c1-6a3800fdd935",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -1728,
+        864
+      ],
+      "id": "79761e5c-53b9-4495-b8f7-b250c44ac088",
+      "name": "Extract from File",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You're an intelligent bot that is great at extracting data from text. \n\nYou need to identify what is the document about and list important data from it in a textual markdown response.",
+              "role": "system"
+            },
+            {
+              "content": "=Here's the document you need to extract the right information from:\n{{ $json.text }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -1760,
+        1056
+      ],
+      "id": "7eabfebe-d1be-4c3c-b4c7-1c0827ea0420",
+      "name": "Extract document information",
+      "credentials": {
+        "openAiApi": {
+          "id": "HhHOHsWZ55qAiD2d",
+          "name": "OpenAI account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "name": "docs",
+        "description": "Documentação para auxiliar o atendimento - utilize estes manuais para tentar ajudar o cliente antes de transferir para um setor"
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolVectorStore",
+      "typeVersion": 1,
+      "position": [
+        16,
+        672
+      ],
+      "id": "df502e30-23b8-4629-ad13-860e9020acbe",
+      "name": "Documentação",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "id": "38680c9e-71f7-4d67-8c63-af7d76e87b64",
+      "name": "Transcreve Áudio",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.4,
+      "position": [
+        -1728,
+        544
+      ],
+      "alwaysOutputData": false,
+      "retryOnFail": false,
+      "credentials": {
+        "openAiApi": {
+          "id": "HhHOHsWZ55qAiD2d",
+          "name": "OpenAI account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Consulta o contexto da empresa no SaaS: regras, horarios, formas de pagamento, modulos e configuracoes. Use quando precisar entender a operacao da loja.",
+        "url": "={{ $(\"Dados coletados\").item.json.saas_api_url + \"/api/integrations/restaurants/\" + $(\"Dados coletados\").item.json.company_id + \"/context\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-webhook-secret",
+              "value": "={{ $(\"Dados coletados\").item.json.webhook_secret }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        896,
+        -400
+      ],
+      "id": "f04a3fd9-2bda-4cf2-8bcd-1ff329b95f99",
+      "name": "consultar_contexto_saas"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Consulta o cardapio disponivel da empresa no SaaS, incluindo categorias, produtos, tamanhos, sabores/adicionais, regras de escolhas e precos. Use antes de falar preco ou montar pedido.",
+        "url": "={{ $(\"Dados coletados\").item.json.saas_api_url + \"/api/integrations/restaurants/\" + $(\"Dados coletados\").item.json.company_id + \"/menu\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-webhook-secret",
+              "value": "={{ $(\"Dados coletados\").item.json.webhook_secret }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        896,
+        -208
+      ],
+      "id": "036c4413-38be-4729-8697-dc897ae244ce",
+      "name": "consultar_cardapio_saas"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -1024,
+        592
+      ],
+      "id": "e117f35d-e17f-401f-a5ee-3abe10870ee2",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "HhHOHsWZ55qAiD2d",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4-turbo",
+          "mode": "list",
+          "cachedResultName": "gpt-4-turbo"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -656,
+        800
+      ],
+      "id": "a549ffea-376b-4482-92e0-54fc9f579af6",
+      "name": "OpenAI Chat Model2",
+      "credentials": {
+        "openAiApi": {
+          "id": "HhHOHsWZ55qAiD2d",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "# Ferramenta que realiza consultas no banco de dados do Integra",
+        "height": 620,
+        "width": 572,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        432,
+        -640
+      ],
+      "id": "f382eaf9-2ca7-4945-a057-806da3c61222",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "espera",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -2176,
+        -320
+      ],
+      "id": "4d91cce3-ddcc-4d61-982e-53b0dd2727fa",
+      "name": "Webhook1",
+      "webhookId": "e93fe9f2-7915-487e-99cf-a421ac682039"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8f1dd78d-2cdf-4ccd-93de-f1f9fcf05242",
+              "name": "content",
+              "value": "={{ $('Webhook1').item.json.body.content }}",
+              "type": "string"
+            },
+            {
+              "id": "52a755db-c4a7-40ed-adb8-db8783fac6ca",
+              "name": "messageType",
+              "value": "={{ $('Webhook1').item.json.body.type }}",
+              "type": "string"
+            },
+            {
+              "id": "28412768-d464-46aa-9e8a-bf52c5a7e7d3",
+              "name": "contact_id",
+              "value": "=contact_{{ $('Webhook1').item.json.body.metadata.from.id }}",
+              "type": "string"
+            },
+            {
+              "id": "907324e1-fb85-484a-ad5b-9fe658cce739",
+              "name": "ticket_id",
+              "value": "={{ $('Webhook1').item.json.body.metadata.ticketId }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "44131972-eac8-46b2-b3e3-57fdcff80ca7",
+      "name": "Dados coletados1",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1856,
+        -320
+      ]
+    },
+    {
+      "parameters": {
+        "unit": "minutes"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -1504,
+        -320
+      ],
+      "id": "70bac874-a712-41b2-89d5-6bfdf0f8dbd6",
+      "name": "Wait",
+      "webhookId": "5a54f7e4-5c37-4fcd-9cd7-68db457f1944"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Webhook1').item.json.body.metadata.backendUrl }}/integrations/webhook",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "==Bearer {{ $('Webhook1').item.json.body.token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  action: \"message\",\n  message: {\n    content: \"Seu atendimento está na fila. Em breve nossa equipe irá responder. Obrigado por aguardar.\"\n  }\n} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1120,
+        -320
+      ],
+      "id": "bb796a70-ca31-45b5-9582-0ed55758435f",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "comercial",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -2176,
+        -592
+      ],
+      "id": "83a60883-afb9-4a53-b4c5-e03ba22de3a0",
+      "name": "Webhook2",
+      "webhookId": "e93fe9f2-7915-487e-99cf-a421ac682039"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8f1dd78d-2cdf-4ccd-93de-f1f9fcf05242",
+              "name": "content",
+              "value": "={{ $('Webhook2').item.json.body.content }}",
+              "type": "string"
+            },
+            {
+              "id": "52a755db-c4a7-40ed-adb8-db8783fac6ca",
+              "name": "messageType",
+              "value": "={{ $('Webhook2').item.json.body.type }}",
+              "type": "string"
+            },
+            {
+              "id": "28412768-d464-46aa-9e8a-bf52c5a7e7d3",
+              "name": "contact_id",
+              "value": "=contact_{{ $('Webhook2').item.json.body.metadata.from.id }}",
+              "type": "string"
+            },
+            {
+              "id": "907324e1-fb85-484a-ad5b-9fe658cce739",
+              "name": "ticket_id",
+              "value": "={{ $('Webhook2').item.json.body.metadata.ticketId }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "64acb04d-4f06-49ab-b49d-db14b7120b4e",
+      "name": "Dados coletados2",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1856,
+        -592
+      ]
+    },
+    {
+      "parameters": {
+        "unit": "minutes"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -1504,
+        -592
+      ],
+      "id": "4a22f080-27d1-4e07-8e62-02ecac48e86a",
+      "name": "Wait1",
+      "webhookId": "5a54f7e4-5c37-4fcd-9cd7-68db457f1944"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Webhook2').item.json.body.metadata.backendUrl }}/integrations/webhook",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "==Bearer {{ $('Webhook2').item.json.body.token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  action: \"message\",\n  message: {\n    content: \"Seu atendimento está na fila. Em breve nossa equipe irá responder. Obrigado por aguardar.\"\n  }\n} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1120,
+        -592
+      ],
+      "id": "5dbfd77d-1752-4823-a06e-a48413060007",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "content": "#SUPORTE\n",
+        "height": 252,
+        "width": 252,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2256,
+        -400
+      ],
+      "id": "099991ab-99b0-4e6a-8afc-37a7f4238a4e",
+      "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "content": "#COMERCIAL",
+        "height": 252,
+        "width": 252,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2256,
+        -656
+      ],
+      "id": "f149094c-7be6-40ad-96eb-97b4c7179224",
+      "name": "Sticky Note9"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "financeiro",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -2176,
+        -848
+      ],
+      "id": "b9ed61ff-197e-43f0-8984-dcd81f8e4b51",
+      "name": "Webhook3",
+      "webhookId": "e93fe9f2-7915-487e-99cf-a421ac682039"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8f1dd78d-2cdf-4ccd-93de-f1f9fcf05242",
+              "name": "content",
+              "value": "={{ $('Webhook3').item.json.body.content }}",
+              "type": "string"
+            },
+            {
+              "id": "52a755db-c4a7-40ed-adb8-db8783fac6ca",
+              "name": "messageType",
+              "value": "={{ $('Webhook3').item.json.body.type }}",
+              "type": "string"
+            },
+            {
+              "id": "28412768-d464-46aa-9e8a-bf52c5a7e7d3",
+              "name": "contact_id",
+              "value": "=contact_{{ $('Webhook3').item.json.body.metadata.from.id }}",
+              "type": "string"
+            },
+            {
+              "id": "907324e1-fb85-484a-ad5b-9fe658cce739",
+              "name": "ticket_id",
+              "value": "={{ $('Webhook3').item.json.body.metadata.ticketId }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "bbfe3553-8bda-4edf-aaf8-3d3ea461899e",
+      "name": "Dados coletados3",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1856,
+        -848
+      ]
+    },
+    {
+      "parameters": {
+        "unit": "minutes"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -1504,
+        -848
+      ],
+      "id": "7ce674c4-52ab-4591-a44b-7c725faaddc6",
+      "name": "Wait2",
+      "webhookId": "5a54f7e4-5c37-4fcd-9cd7-68db457f1944"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Webhook3').item.json.body.metadata.backendUrl }}/integrations/webhook",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "==Bearer {{ $('Webhook3').item.json.body.token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  action: \"message\",\n  message: {\n    content: \"Seu atendimento está na fila. Em breve nossa equipe irá responder. Obrigado por aguardar.\"\n  }\n} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1120,
+        -848
+      ],
+      "id": "d12ee286-3cce-4739-a472-efde4e39e15d",
+      "name": "HTTP Request2"
+    },
+    {
+      "parameters": {
+        "content": "#fFINANCEIRO\n",
+        "height": 252,
+        "width": 252,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2256,
+        -912
+      ],
+      "id": "fd5c8673-eab3-4897-9261-1e07fcbff257",
+      "name": "Sticky Note10"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "compras",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -2176,
+        -1104
+      ],
+      "id": "21f3dab1-e9cb-4d0b-a733-ddbc95b4a1f0",
+      "name": "Webhook4",
+      "webhookId": "e93fe9f2-7915-487e-99cf-a421ac682039"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8f1dd78d-2cdf-4ccd-93de-f1f9fcf05242",
+              "name": "content",
+              "value": "={{ $('Webhook4').item.json.body.content }}",
+              "type": "string"
+            },
+            {
+              "id": "52a755db-c4a7-40ed-adb8-db8783fac6ca",
+              "name": "messageType",
+              "value": "={{ $('Webhook4').item.json.body.type }}",
+              "type": "string"
+            },
+            {
+              "id": "28412768-d464-46aa-9e8a-bf52c5a7e7d3",
+              "name": "contact_id",
+              "value": "=contact_{{ $('Webhook4').item.json.body.metadata.from.id }}",
+              "type": "string"
+            },
+            {
+              "id": "907324e1-fb85-484a-ad5b-9fe658cce739",
+              "name": "ticket_id",
+              "value": "={{ $('Webhook4').item.json.body.metadata.ticketId }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "0350c98a-2056-4b2a-9e3a-0995c05d859c",
+      "name": "Dados coletados4",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1856,
+        -1104
+      ]
+    },
+    {
+      "parameters": {
+        "unit": "minutes"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -1504,
+        -1104
+      ],
+      "id": "46c08f5f-491a-4ca6-ba75-ce0dad91b3c4",
+      "name": "Wait3",
+      "webhookId": "5a54f7e4-5c37-4fcd-9cd7-68db457f1944"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Webhook4').item.json.body.metadata.backendUrl }}/integrations/webhook",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "==Bearer {{ $('Webhook4').item.json.body.token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  action: \"message\",\n  message: {\n    content: \"Seu atendimento está na fila. Em breve nossa equipe irá responder. Obrigado por aguardar.\"\n  }\n} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1120,
+        -1104
+      ],
+      "id": "8646b1d4-2a21-4adc-89e1-0d8bc0d21470",
+      "name": "HTTP Request3"
+    },
+    {
+      "parameters": {
+        "content": "#COMPRAS\n",
+        "height": 252,
+        "width": 252,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2256,
+        -1168
+      ],
+      "id": "e52da730-0c0c-4794-a339-1b0621ccef22",
+      "name": "Sticky Note11"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Cria um pedido no SaaS depois da confirmacao do cliente. Use somente quando itens, cliente, tipo de pedido, endereco se delivery, pagamento e observacoes estiverem confirmados. O pedido entra aguardando confirmacao da loja.",
+        "method": "POST",
+        "url": "={{ $(\"Dados coletados\").item.json.saas_api_url + \"/api/integrations/restaurants/\" + $(\"Dados coletados\").item.json.company_id + \"/orders\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-webhook-secret",
+              "value": "={{ $(\"Dados coletados\").item.json.webhook_secret }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"ticketzTicketId\": $(\"Dados coletados\").item.json.ticketz_ticket_id,\n  \"customer\": {\n    \"name\": $fromAI(\"customerName\", \"Nome completo do cliente\", \"string\"),\n    \"phone\": $fromAI(\"customerPhone\", \"Telefone/WhatsApp do cliente\", \"string\")\n  },\n  \"orderType\": $fromAI(\"orderType\", \"delivery, pickup ou table\", \"string\"),\n  \"address\": {\n    \"street\": $fromAI(\"street\", \"Rua para entrega. Vazio se retirada\", \"string\"),\n    \"number\": $fromAI(\"number\", \"Numero para entrega. Vazio se retirada\", \"string\"),\n    \"neighborhood\": $fromAI(\"neighborhood\", \"Bairro para entrega. Vazio se retirada\", \"string\"),\n    \"complement\": $fromAI(\"complement\", \"Complemento. Vazio se nao houver\", \"string\"),\n    \"reference\": $fromAI(\"reference\", \"Referencia. Vazio se nao houver\", \"string\")\n  },\n  \"paymentMethod\": $fromAI(\"paymentMethod\", \"Forma de pagamento informada pelo cliente\", \"string\"),\n  \"notes\": $fromAI(\"notes\", \"Observacoes gerais do pedido\", \"string\"),\n  \"items\": JSON.parse($fromAI(\"itemsJson\", \"Array JSON dos itens confirmados\", \"string\"))\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        704,
+        -192
+      ],
+      "id": "ad579226-609b-4231-a5f6-3b9a6f6c7db8",
+      "name": "criar_pedido_saas"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Registra um evento interno do atendimento no SaaS, como erro de pedido, transferencia humana ou informacao importante. Esta ferramenta nao responde ao cliente.",
+        "method": "POST",
+        "url": "={{ $(\"Dados coletados\").item.json.saas_api_url + \"/api/integrations/n8n/events\" }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"companyId\": $(\"Dados coletados\").item.json.company_id,\n  \"ticketId\": $(\"Dados coletados\").item.json.ticket_id,\n  \"ticketzTicketId\": $(\"Dados coletados\").item.json.ticketz_ticket_id,\n  \"event\": $fromAI(\"event\", \"Tipo do evento\", \"string\"),\n  \"summary\": $fromAI(\"summary\", \"Resumo curto do evento\", \"string\")\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        -496
+      ],
+      "id": "d09c2cc1-3e81-4ba2-9196-437edbf282e7",
+      "name": "registrar_evento_saas"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  competencia,\n  documento,\n  nome_cliente,\n  SUM(quantidade) AS total_atendimentos,\n  SUM(CASE WHEN setor = 'suporte' THEN quantidade ELSE 0 END) AS suporte,\n  SUM(CASE WHEN setor = 'financeiro' THEN quantidade ELSE 0 END) AS financeiro,\n  SUM(CASE WHEN setor = 'comercial' THEN quantidade ELSE 0 END) AS comercial,\n  SUM(CASE WHEN setor = 'atendimento' THEN quantidade ELSE 0 END) AS atendimento,\n  MIN(primeiro_atendimento) AS primeiro_atendimento,\n  MAX(ultimo_atendimento) AS ultimo_atendimento\nFROM atendimento_metricas_cliente\nWHERE competencia = to_char(now(), 'YYYY-MM')\nGROUP BY competencia, documento, nome_cliente\nORDER BY total_atendimentos DESC;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1200,
+        -544
+      ],
+      "id": "8487d027-9656-47b8-a2bb-51f1e1ae05aa",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "postgres": {
+          "id": "9VzTerivQucfZd7y",
+          "name": "Postgres account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Prompts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Segmenta e responde",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculator": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres PGVector Store": {
+      "ai_vectorStore": [
+        [
+          {
+            "node": "Documentação",
+            "type": "ai_vectorStore",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Documentação",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analisa Imagem": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Test content": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Test media file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Test media file": {
+      "main": [
+        [
+          {
+            "node": "Baixa arquivo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dados coletados": {
+      "main": [
+        [
+          {
+            "node": "Test content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prompts": {
+      "main": [
+        [
+          {
+            "node": "Dados coletados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Baixa arquivo": {
+      "main": [
+        [
+          {
+            "node": "Detecta tipo do arquivo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Detecta tipo do arquivo": {
+      "main": [
+        [
+          {
+            "node": "Transcreve Áudio",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Analisa Imagem",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Postgres PGVector Store",
+            "type": "ai_embedding",
+            "index": 0
+          },
+          {
+            "node": "Postgres PGVector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MCP Client": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consulta CEP": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload your file here": {
+      "main": [
+        [
+          {
+            "node": "Postgres PGVector Store1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Postgres PGVector Store1",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sector and Queue operations": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add note on ticket": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Extract document information",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract document information": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcreve Áudio": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Structured Output Parser",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "Dados coletados1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dados coletados1": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook2": {
+      "main": [
+        [
+          {
+            "node": "Dados coletados2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dados coletados2": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook3": {
+      "main": [
+        [
+          {
+            "node": "Dados coletados3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dados coletados3": {
+      "main": [
+        [
+          {
+            "node": "Wait2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait2": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook4": {
+      "main": [
+        [
+          {
+            "node": "Dados coletados4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dados coletados4": {
+      "main": [
+        [
+          {
+            "node": "Wait3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait3": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "consultar_contexto_saas": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "consultar_cardapio_saas": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "criar_pedido_saas": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "registrar_evento_saas": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "57bd13f3-66a3-4584-9c3e-0f75e9fb1e07",
+  "meta": {
+    "instanceId": "4e8a11227f27d345ed14c2646fbe75d91745aa10bb5d927d239776e969700f15"
+  },
+  "id": "ticketz-restaurante-saas-template",
+  "tags": []
+}
