@@ -1,38 +1,43 @@
-/* Isolated presentation for the super-admin platform workspace. */
-.masterShell { min-height: 100vh; display: grid; grid-template-columns: 248px minmax(0, 1fr); background: #edf3f7; color: #152536; }
-.masterSidebar { min-height: 100vh; display: flex; flex-direction: column; gap: 28px; padding: 22px 16px; background: #102d41; color: #eaf5fc; }
-.masterBrand { display: flex; align-items: center; gap: 11px; min-width: 0; }
-.masterBrand .mark { width: 44px; height: 44px; flex: 0 0 auto; border-radius: 8px; background: #168779; color: #ffffff; }
+/* Isolated VIB presentation for the super-admin workspace. */
+.masterShell { --vib-blue: #1268f3; --vib-cyan: #08c7c8; --vib-ink: #111827; min-height: 100vh; display: grid; grid-template-columns: 248px minmax(0, 1fr); background: #f3f7fa; color: var(--vib-ink); }
+.masterSidebar { min-height: 100vh; display: flex; flex-direction: column; gap: 30px; padding: 24px 16px; border-right: 1px solid #17324d; background: #09182a; color: #edf7ff; }
+.masterBrand { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 0 8px; }
+.masterBrand > img { width: 48px; height: 48px; flex: 0 0 48px; object-fit: contain; }
 .masterBrand div { min-width: 0; display: grid; gap: 2px; }
-.masterBrand strong { color: #ffffff; font-size: 16px; }
-.masterBrand span:not(.mark) { color: #b7d6e7; font-size: 13px; }
+.masterBrand strong { color: #ffffff; font-size: 23px; line-height: 1; }
+.masterBrand span { color: #9eb5c9; font-size: 12px; }
 .masterSidebar nav { display: grid; gap: 6px; }
-.masterSidebar nav button, .masterLogout { min-height: 44px; display: flex; align-items: center; gap: 10px; width: 100%; border-radius: 7px; padding: 0 12px; background: transparent; color: #dbeef8; text-align: left; font-weight: 800; }
+.masterSidebar nav button, .masterLogout { min-height: 46px; display: flex; align-items: center; gap: 10px; width: 100%; border: 1px solid transparent; border-radius: 7px; padding: 0 12px; background: transparent; color: #cbdbe8; text-align: left; font-weight: 800; }
 .masterSidebar nav button svg, .masterLogout svg { width: 19px; height: 19px; flex: 0 0 auto; }
-.masterSidebar nav button:hover, .masterSidebar nav button.active { background: #1b796f; color: #ffffff; }
-.masterLogout { margin-top: auto; background: rgba(255, 255, 255, 0.1); }
-.masterLogout:hover { background: rgba(255, 255, 255, 0.18); }
+.masterSidebar nav button:hover { border-color: #29445d; background: #10253a; color: #ffffff; }
+.masterSidebar nav button.active { border-color: #2978f1; background: var(--vib-blue); color: #ffffff; box-shadow: 0 8px 20px rgba(18, 104, 243, 0.24); }
+.masterLogout { margin-top: auto; background: #10253a; }
+.masterLogout:hover { border-color: #36526a; background: #17314a; color: #ffffff; }
 .masterMain { min-width: 0; padding: 30px clamp(20px, 3vw, 48px) 48px; }
 .masterTopbar, .masterSectionHeader, .masterCompanyTitle, .masterCompanyCard footer { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
 .masterTopbar { margin-bottom: 26px; }
 .masterTopbar > div, .masterSectionHeader > div { display: grid; gap: 6px; }
-.masterTopbar span { color: #637482; font-size: 12px; font-weight: 800; text-transform: uppercase; }
-.masterTopbar h1, .masterSectionHeader h2 { margin: 0; color: #152536; }
+.masterTopbar span { color: var(--vib-blue); font-size: 12px; font-weight: 800; text-transform: uppercase; }
+.masterTopbar h1, .masterSectionHeader h2 { margin: 0; color: var(--vib-ink); }
 .masterTopbar h1 { font-size: 32px; }
 .masterTopbar label { width: min(360px, 100%); color: #566875; }
-.masterTopbar select { margin-top: 2px; background: #ffffff; }
+.masterTopbar select { margin-top: 4px; border-color: #cbd8e3; background: #ffffff; }
 .masterMetrics { grid-template-columns: repeat(4, minmax(0, 1fr)); margin-bottom: 30px; }
-.masterMetrics article { min-height: 114px; display: grid; align-content: center; gap: 8px; padding: 18px; border: 1px solid #d9e4eb; border-radius: 8px; background: #ffffff; box-shadow: 0 10px 22px rgba(24, 54, 72, 0.06); }
+.masterMetrics article { min-height: 114px; display: grid; align-content: center; gap: 8px; padding: 18px; border: 1px solid #d8e2ea; border-top: 3px solid var(--vib-blue); border-radius: 8px; background: #ffffff; box-shadow: 0 10px 24px rgba(27, 48, 68, 0.06); }
+.masterMetrics article:nth-child(2) { border-top-color: var(--vib-cyan); }
+.masterMetrics article:nth-child(3) { border-top-color: #17a673; }
+.masterMetrics article:nth-child(4) { border-top-color: #e5a229; }
 .masterMetrics span, .masterCompanyCard dt, .masterCompanyTitle span { color: #637482; }
-.masterMetrics strong { color: #0d3045; font-size: 26px; }
+.masterMetrics strong { color: var(--vib-ink); font-size: 26px; }
 .masterCompanies { display: grid; gap: 20px; }
 .masterSectionHeader { align-items: flex-end; }
 .masterSectionHeader p { max-width: 760px; margin: 0; color: #566875; }
-.primaryInlineButton { min-height: 42px; display: inline-flex; align-items: center; gap: 8px; flex: 0 0 auto; border-radius: 7px; padding: 0 15px; background: #0c718e; color: #ffffff; font-weight: 800; }
-.primaryInlineButton:hover { background: #075d78; }
+.primaryInlineButton { min-height: 42px; display: inline-flex; align-items: center; gap: 8px; flex: 0 0 auto; border-radius: 7px; padding: 0 15px; background: var(--vib-blue); color: #ffffff; font-weight: 800; box-shadow: 0 8px 18px rgba(18, 104, 243, 0.2); }
+.primaryInlineButton:hover { background: #0b55ce; }
 .primaryInlineButton svg { width: 18px; height: 18px; }
 .masterCompanyGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(285px, 1fr)); gap: 16px; }
-.masterCompanyCard { min-width: 0; min-height: 252px; display: grid; align-content: space-between; gap: 20px; overflow: hidden; padding: 18px; border: 1px solid #d9e4eb; border-radius: 8px; background: #ffffff; box-shadow: 0 10px 22px rgba(24, 54, 72, 0.06); }
+.masterCompanyCard { min-width: 0; min-height: 252px; display: grid; align-content: space-between; gap: 20px; overflow: hidden; padding: 18px; border: 1px solid #d8e2ea; border-radius: 8px; background: #ffffff; box-shadow: 0 10px 24px rgba(27, 48, 68, 0.06); }
+.masterCompanyCard:hover { border-color: #b8cce0; box-shadow: 0 14px 30px rgba(27, 48, 68, 0.1); }
 .masterCompanyTitle { justify-content: flex-start; }
 .masterCompanyTitle > img, .masterCompanyTitle > .companyAvatar { width: 46px; height: 46px; flex: 0 0 46px; overflow: hidden; border-radius: 8px; object-fit: cover; }
 .masterCompanyTitle > div { min-width: 0; display: grid; gap: 4px; }
@@ -40,11 +45,14 @@
 .masterCompanyCard dl { display: grid; gap: 10px; margin: 0; }
 .masterCompanyCard dl > div { display: flex; justify-content: space-between; gap: 12px; padding-bottom: 10px; border-bottom: 1px solid #edf1f4; }
 .masterCompanyCard dt, .masterCompanyCard dd { margin: 0; }
-.masterCompanyCard dd { color: #18364a; font-weight: 800; text-align: right; }
+.masterCompanyCard dd { color: #172b3e; font-weight: 800; text-align: right; }
 .masterCompanyCard footer { align-items: stretch; flex-wrap: wrap; justify-content: flex-start; gap: 8px; }
-.masterCompanyCard footer button { min-height: 36px; flex: 1 1 92px; border-radius: 6px; padding: 7px 10px; background: #eaf2f6; color: #155775; font-size: 12px; font-weight: 800; }
-.masterCompanyCard footer button:last-child { flex-basis: 150px; background: #0c718e; color: #ffffff; }
+.masterCompanyCard footer button { min-height: 36px; flex: 1 1 92px; border: 1px solid #d2e0eb; border-radius: 6px; padding: 7px 10px; background: #f0f5f8; color: #214965; font-size: 12px; font-weight: 800; }
+.masterCompanyCard footer button:hover { border-color: #9bb9d0; background: #e5eef4; }
+.masterCompanyCard footer button:last-child { flex-basis: 150px; border-color: var(--vib-blue); background: var(--vib-blue); color: #ffffff; }
+.masterCompanyCard footer button:last-child:hover { background: #0b55ce; }
 .masterCompanyEditor { margin-top: 4px; border-radius: 8px; }
+.masterShell button:focus-visible, .masterShell select:focus-visible { outline: 3px solid rgba(8, 199, 200, 0.38); outline-offset: 2px; }
 
 @media (max-width: 1100px) { .masterMetrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 760px) {

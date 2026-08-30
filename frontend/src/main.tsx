@@ -3698,10 +3698,10 @@ function MasterPanel({
     <main className="masterShell">
       <aside className="masterSidebar">
         <div className="masterBrand">
-          <span className="mark">Vib</span>
+          <img src="/vib-favicon.png" alt="" aria-hidden="true" />
           <div>
-            <strong>Correacloud SaaS</strong>
-            <span>Painel master</span>
+            <strong>VIB</strong>
+            <span>Plataforma master</span>
           </div>
         </div>
         <nav>
