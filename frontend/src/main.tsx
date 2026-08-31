@@ -8,14 +8,18 @@ import {
   CalendarDays,
   ChefHat,
   ClipboardList,
+  ChevronLeft,
+  ChevronRight,
   CreditCard,
   ExternalLink,
   FileText,
   Gift,
   HelpCircle,
+  ImagePlus,
   LogOut,
   Menu as MenuIcon,
   MessageSquare,
+  Mic,
   Package,
   Paperclip,
   Percent,
@@ -27,6 +31,7 @@ import {
   ShoppingBag,
   Smile,
   Smartphone,
+  Square,
   Store,
   Table2,
   Truck,
@@ -3991,7 +3996,76 @@ function RestaurantWhatsappPage({
   const [error, setError] = useState("");
   const [openingAdvanced, setOpeningAdvanced] = useState(false);
   const [success, setSuccess] = useState("");
+  const [assistCollapsed, setAssistCollapsed] = useState(false);
+  const [emojiOpen, setEmojiOpen] = useState(false);
+  const [recordingAudio, setRecordingAudio] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const recordingStreamRef = useRef<MediaStream | null>(null);
+  const recordingChunksRef = useRef<Blob[]>([]);
+
+  const quickEmojis = ["😀", "😂", "😍", "👍", "🙏", "❤️", "✅", "🎉", "🍕", "🍔", "📍", "🚚"];
+
+  function openFilePicker(accept: string) {
+    if (!fileInputRef.current) return;
+    fileInputRef.current.accept = accept;
+    fileInputRef.current.click();
+  }
+
+  async function toggleAudioRecording() {
+    const activeRecorder = recorderRef.current;
+    if (activeRecorder && activeRecorder.state !== "inactive") {
+      activeRecorder.stop();
+      return;
+    }
+
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
+      setError("Este navegador nao permite gravar audio. Voce ainda pode anexar um arquivo de audio.");
+      return;
+    }
+
+    setError("");
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const preferredMimeType = ["audio/webm;codecs=opus", "audio/webm", "audio/ogg"]
+        .find(type => MediaRecorder.isTypeSupported(type));
+      const recorder = preferredMimeType
+        ? new MediaRecorder(stream, { mimeType: preferredMimeType })
+        : new MediaRecorder(stream);
+
+      recordingStreamRef.current = stream;
+      recordingChunksRef.current = [];
+      recorderRef.current = recorder;
+      recorder.ondataavailable = event => {
+        if (event.data.size > 0) recordingChunksRef.current.push(event.data);
+      };
+      recorder.onstop = () => {
+        const mimeType = recorder.mimeType || "audio/webm";
+        const extension = mimeType.includes("ogg") ? "ogg" : "webm";
+        const blob = new Blob(recordingChunksRef.current, { type: mimeType });
+        if (blob.size > 0) {
+          setAttachedFile(new File([blob], `audio-${Date.now()}.${extension}`, { type: mimeType }));
+        }
+        recordingStreamRef.current?.getTracks().forEach(track => track.stop());
+        recordingStreamRef.current = null;
+        recorderRef.current = null;
+        recordingChunksRef.current = [];
+        setRecordingAudio(false);
+      };
+      recorder.onerror = () => {
+        setError("Nao foi possivel concluir a gravacao do audio.");
+      };
+      recorder.start();
+      setRecordingAudio(true);
+      setEmojiOpen(false);
+    } catch {
+      setError("Permita o acesso ao microfone para gravar audio nesta conversa.");
+      recordingStreamRef.current?.getTracks().forEach(track => track.stop());
+      recordingStreamRef.current = null;
+      recorderRef.current = null;
+      setRecordingAudio(false);
+    }
+  }
 
   async function openAdvancedTicketz() {
     setError("");
@@ -4126,6 +4200,16 @@ function RestaurantWhatsappPage({
     return () => window.clearInterval(interval);
   }, [selectedTicketId, session.token]);
 
+  useEffect(() => () => {
+    const recorder = recorderRef.current;
+    if (recorder && recorder.state !== "inactive") {
+      recorder.ondataavailable = null;
+      recorder.onstop = null;
+      recorder.stop();
+    }
+    recordingStreamRef.current?.getTracks().forEach(track => track.stop());
+  }, []);
+
   async function sendMessage(event: React.FormEvent) {
     event.preventDefault();
     const content = draft.trim();
@@ -4161,6 +4245,7 @@ function RestaurantWhatsappPage({
       });
       setDraft("");
       setAttachedFile(null);
+      setEmojiOpen(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
       const nextTicketId = String((sent.ticket as Record<string, unknown> | undefined)?.id || selectedTicketId);
       if (nextTicketId !== selectedTicketId) {
@@ -4279,7 +4364,7 @@ function RestaurantWhatsappPage({
   const selectedHumanTakeover = Boolean(selectedTicket?.humanTakeover);
 
   return (
-    <section className="whatsappDesk">
+    <section className={`whatsappDesk${assistCollapsed ? " assistCollapsed" : ""}`}>
       <aside className="chatList">
         <header>
           <strong>Conversas</strong>
@@ -4377,15 +4462,49 @@ function RestaurantWhatsappPage({
         {error && <div className="error">{error}</div>}
         {success && <div className="successNote">{success}</div>}
         <form className="chatComposer" onSubmit={sendMessage}>
-          <button
-            type="button"
-            className="attachButton"
-            disabled={!selectedTicket || sending}
-            onClick={() => fileInputRef.current?.click()}
-            title="Anexar arquivo"
-          >
-            <Paperclip />
-          </button>
+          <div className="chatComposerTools">
+            <button
+              type="button"
+              className="attachButton"
+              disabled={!selectedTicket || sending || recordingAudio}
+              onClick={() => openFilePicker("image/*")}
+              title="Enviar foto"
+              aria-label="Enviar foto"
+            >
+              <ImagePlus />
+            </button>
+            <button
+              type="button"
+              className="attachButton"
+              disabled={!selectedTicket || sending || recordingAudio}
+              onClick={() => openFilePicker("image/*,audio/*,video/mp4,application/pdf,text/plain,.doc,.docx,.xls,.xlsx")}
+              title="Anexar arquivo"
+              aria-label="Anexar arquivo"
+            >
+              <Paperclip />
+            </button>
+            <button
+              type="button"
+              className="attachButton"
+              disabled={!selectedTicket || sending || recordingAudio}
+              onClick={() => setEmojiOpen(current => !current)}
+              title="Escolher emoji"
+              aria-label="Escolher emoji"
+              aria-expanded={emojiOpen}
+            >
+              <Smile />
+            </button>
+            <button
+              type="button"
+              className={`attachButton audioRecordButton${recordingAudio ? " recording" : ""}`}
+              disabled={!selectedTicket || sending}
+              onClick={toggleAudioRecording}
+              title={recordingAudio ? "Parar gravacao" : "Gravar audio"}
+              aria-label={recordingAudio ? "Parar gravacao" : "Gravar audio"}
+            >
+              {recordingAudio ? <Square /> : <Mic />}
+            </button>
+          </div>
           <input
             ref={fileInputRef}
             type="file"
@@ -4403,6 +4522,24 @@ function RestaurantWhatsappPage({
           <button type="submit" disabled={!selectedTicket || sending || (!draft.trim() && !attachedFile)}>
             {sending ? "Enviando..." : "Enviar"}
           </button>
+          {emojiOpen && (
+            <div className="emojiPicker" role="group" aria-label="Emojis rapidos">
+              {quickEmojis.map(emoji => (
+                <button
+                  type="button"
+                  key={emoji}
+                  onClick={() => {
+                    setDraft(current => `${current}${emoji}`);
+                    setEmojiOpen(false);
+                  }}
+                  aria-label={`Inserir ${emoji}`}
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+          )}
+          {recordingAudio && <div className="recordingNote">Gravando audio... toque no quadrado para finalizar.</div>}
           {attachedFile && (
             <div className="attachmentPreview">
               <span>{attachedFile.name}</span>
@@ -4420,20 +4557,31 @@ function RestaurantWhatsappPage({
         </form>
       </main>
 
-      <aside className="orderAssist">
+      <aside className={`orderAssist${assistCollapsed ? " collapsed" : ""}`}>
         <header>
-          <div>
-            <strong>Automacao</strong>
-            <span>{String(company.name || "Empresa")}</span>
-          </div>
-          {!nativeConnection && (
+          {!assistCollapsed && (
+            <div>
+              <strong>Automacao</strong>
+              <span>{String(company.name || "Empresa")}</span>
+            </div>
+          )}
+          {!assistCollapsed && !nativeConnection && (
             <button type="button" className="advancedTicketzLink" onClick={openAdvancedTicketz} disabled={openingAdvanced}>
               <ExternalLink />
               {openingAdvanced ? "Abrindo..." : "Avancado"}
             </button>
           )}
+          <button
+            type="button"
+            className="assistCollapseButton"
+            onClick={() => setAssistCollapsed(current => !current)}
+            title={assistCollapsed ? "Abrir configuracoes" : "Recolher configuracoes"}
+            aria-label={assistCollapsed ? "Abrir configuracoes" : "Recolher configuracoes"}
+          >
+            {assistCollapsed ? <ChevronLeft /> : <ChevronRight />}
+          </button>
         </header>
-        <div className="assistStatusGrid">
+        {!assistCollapsed && <div className="assistStatusGrid">
           <article>
             <span>WhatsApp</span>
             <strong>{activeConnectionStatus}</strong>
@@ -4450,8 +4598,8 @@ function RestaurantWhatsappPage({
             <span>n8n</span>
             <strong>{company.n8nWebhookUrl ? "Configurado" : "Pendente"}</strong>
           </article>
-        </div>
-        <div className="connectionBox">
+        </div>}
+        {!assistCollapsed && <div className="connectionBox">
           <div>
             <strong>{String(activeConnection?.name || company.name || "WhatsApp")}</strong>
             <span>{activeConnection ? nativeConnection ? "Conexao nativa do SaaS" : "Conexao legada pelo Ticketz" : "Nenhuma conexao cadastrada"}</span>
@@ -4483,8 +4631,8 @@ function RestaurantWhatsappPage({
           {!activeConnection && (
             <small>Crie ou reprovisione a integracao da empresa para liberar o QR nesta tela.</small>
           )}
-        </div>
-        <div className="assistActions">
+        </div>}
+        {!assistCollapsed && <div className="assistActions">
           <button type="button" disabled={!selectedTicket || selectedHumanTakeover} onClick={() => toggleHandoff(true)}>
             Assumir humano
           </button>
@@ -4500,12 +4648,12 @@ function RestaurantWhatsappPage({
           <button type="button" className="dangerAction" disabled={!selectedTicket || closingTicket} onClick={closeSelectedTicket}>
             {closingTicket ? "Fechando..." : "Fechar atendimento"}
           </button>
-        </div>
-        <div className="assistHint">
+        </div>}
+        {!assistCollapsed && <div className="assistHint">
           {nativeConnection
             ? "Esta conexao roda no proprio SaaS. Conversas, midias, atendimento humano e automacoes ficam neste painel."
             : "Conexao legada pelo Ticketz. Migre pelo botao acima quando estiver pronto para ler um novo QR Code."}
-        </div>
+        </div>}
       </aside>
     </section>
   );
@@ -5121,7 +5269,7 @@ function RestaurantAdminPanel({
           </div>
         </div>
       </aside>
-      <section className="restaurantMain">
+      <section className={`restaurantMain${view === "whatsapp" ? " whatsappWorkspaceActive" : ""}`}>
         <header className="restaurantTopbar">
           <div className="restaurantCompanyPicker">
             <Store />
