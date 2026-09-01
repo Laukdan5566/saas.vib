@@ -241,6 +241,29 @@ const barbershopNav: RestaurantNavItem[] = [
   { key: "settings", label: "Configuracoes", group: "Configuracoes", icon: <Settings /> }
 ];
 
+type MasterTab = "companies" | "billing" | "config";
+
+function adminLocation() {
+  const params = new URLSearchParams(window.location.search);
+  const view = params.get("view");
+  const masterTab = params.get("masterTab");
+  return {
+    mode: params.get("adminMode"),
+    companyId: params.get("company"),
+    view: [...restaurantNav, ...barbershopNav].some(item => item.key === view) ? view as RestaurantViewKey : null,
+    masterTab: ["companies", "billing", "config"].includes(String(masterTab)) ? masterTab as MasterTab : null
+  };
+}
+
+function updateAdminLocation(values: Record<string, string | null | undefined>) {
+  const url = new URL(window.location.href);
+  Object.entries(values).forEach(([key, value]) => {
+    if (value) url.searchParams.set(key, value);
+    else url.searchParams.delete(key);
+  });
+  window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+}
+
 const restaurantModules: Partial<Record<RestaurantViewKey, string>> = {
   whatsapp: "connections",
   orders: "orders",
@@ -2728,12 +2751,14 @@ function PlatformBillingPage({
   session,
   companyId,
   companies,
-  onCompanyChange
+  onCompanyChange,
+  showAllInvoices = false
 }: {
   session: Session;
   companyId: string;
   companies: Record<string, unknown>[];
   onCompanyChange?: (companyId: string) => void;
+  showAllInvoices?: boolean;
 }) {
   const isSuperAdmin = session.user.role === "super_admin";
   const [plans, setPlans] = useState<Record<string, unknown>[]>([]);
@@ -2885,8 +2910,15 @@ function PlatformBillingPage({
             ? `/api/billing/invoices/${invoice.id}/generate-pix`
             : `/api/billing/my-invoices/${invoice.id}/pay-pix`;
     try {
-      await api(session, path, { method: "POST", body: JSON.stringify({}) });
+      const updatedInvoice = await api(session, path, { method: "POST", body: JSON.stringify({}) });
+      if (updatedInvoice?.id) {
+        setInvoices(current => current.map(item => String(item.id) === String(updatedInvoice.id) ? updatedInvoice : item));
+      }
       await loadBilling();
+      if (["boleto", "pix", "refresh"].includes(action)) {
+        await new Promise(resolve => window.setTimeout(resolve, 700));
+        await loadBilling();
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao processar fatura");
     } finally {
@@ -2913,7 +2945,7 @@ function PlatformBillingPage({
 
   const openInvoices = invoices.filter(invoice => !["paid", "canceled"].includes(String(invoice.status)));
   const paidInvoices = invoices.filter(invoice => String(invoice.status) === "paid");
-  const visibleInvoices = isSuperAdmin
+  const visibleInvoices = isSuperAdmin && showAllInvoices
     ? invoices
     : invoices.filter(invoice => ["open", "pending", "overdue"].includes(String(invoice.status)));
   const openTotal = openInvoices.reduce((sum, invoice) => sum + Number(invoice.value || 0), 0);
@@ -3673,7 +3705,7 @@ function MasterPanel({
   onCompanySaved: (company: Record<string, unknown>) => void;
   onLogout: () => void;
 }) {
-  const [tab, setTab] = useState<"companies" | "billing" | "config">("companies");
+  const [tab, setTab] = useState<MasterTab>(() => adminLocation().masterTab || "companies");
   const [plans, setPlans] = useState<Record<string, unknown>[]>([]);
   const [subscriptions, setSubscriptions] = useState<Record<string, unknown>[]>([]);
   const [invoices, setInvoices] = useState<Record<string, unknown>[]>([]);
@@ -3681,6 +3713,15 @@ function MasterPanel({
   const [creatingCompany, setCreatingCompany] = useState(false);
   const selectedCompany = companies.find(company => String(company.id) === selectedCompanyId) || companies[0];
   const safeCompanyId = selectedCompany ? String(selectedCompany.id) : null;
+
+  function selectTab(nextTab: MasterTab) {
+    setTab(nextTab);
+    updateAdminLocation({ adminMode: "master", masterTab: nextTab, view: null });
+  }
+
+  useEffect(() => {
+    updateAdminLocation({ adminMode: "master", masterTab: tab, company: safeCompanyId, view: null });
+  }, [tab, safeCompanyId]);
 
   useEffect(() => {
     if (session.user.role !== "super_admin") return;
@@ -3710,13 +3751,13 @@ function MasterPanel({
           </div>
         </div>
         <nav>
-          <button type="button" className={tab === "companies" ? "active" : ""} onClick={() => setTab("companies")}>
+          <button type="button" className={tab === "companies" ? "active" : ""} onClick={() => selectTab("companies")}>
             <Building2 /> Empresas
           </button>
-          <button type="button" className={tab === "billing" ? "active" : ""} onClick={() => setTab("billing")}>
+          <button type="button" className={tab === "billing" ? "active" : ""} onClick={() => selectTab("billing")}>
             <FileText /> Cobrancas
           </button>
-          <button type="button" className={tab === "config" ? "active" : ""} onClick={() => setTab("config")}>
+          <button type="button" className={tab === "config" ? "active" : ""} onClick={() => selectTab("config")}>
             <Settings /> Config Efí
           </button>
         </nav>
@@ -3806,7 +3847,7 @@ function MasterPanel({
                       }}>Editar</button>
                       <button type="button" onClick={() => {
                         onCompanyChange(String(company.id));
-                        setTab("billing");
+                        selectTab("billing");
                       }}>Cobrar</button>
                       <button type="button" onClick={() => onConnectCompany(String(company.id))}>Conectar como suporte</button>
                     </footer>
@@ -3823,6 +3864,7 @@ function MasterPanel({
             companyId={safeCompanyId}
             companies={companies}
             onCompanyChange={onCompanyChange}
+            showAllInvoices
           />
         )}
         {tab === "config" && <BillingGatewayConfigPanel session={session} />}
@@ -5087,7 +5129,7 @@ function RestaurantAdminPanel({
   onBackToMaster?: () => void;
   onLogout: () => void;
 }) {
-  const [view, setView] = useState<RestaurantViewKey>("dashboard");
+  const [view, setView] = useState<RestaurantViewKey>(() => adminLocation().view || "dashboard");
   const [orders, setOrders] = useState<Record<string, unknown>[]>([]);
   const [paymentMethods, setPaymentMethods] = useState<Record<string, unknown>[]>([]);
   const [changingOrderAcceptance, setChangingOrderAcceptance] = useState(false);
@@ -5097,6 +5139,25 @@ function RestaurantAdminPanel({
   const selectedCompanySettings = selectedCompany.settings as Record<string, unknown> | undefined;
   const acceptOrders = selectedCompanySettings?.acceptOrders !== false;
   const companySlugValue = companySlug(selectedCompany);
+
+  function selectView(nextView: RestaurantViewKey) {
+    setView(nextView);
+    updateAdminLocation({
+      adminMode: session.user.role === "super_admin" ? "company" : "user",
+      company: selectedCompanyId,
+      view: nextView,
+      masterTab: null
+    });
+  }
+
+  useEffect(() => {
+    updateAdminLocation({
+      adminMode: session.user.role === "super_admin" ? "company" : "user",
+      company: selectedCompanyId,
+      view,
+      masterTab: null
+    });
+  }, [selectedCompanyId, session.user.role, view]);
 
   useEffect(() => {
     Promise.all([
@@ -5253,7 +5314,7 @@ function RestaurantAdminPanel({
             return (
               <React.Fragment key={item.key}>
                 {showGroup && <span className="navGroup">{item.group}</span>}
-                <button type="button" className={view === item.key ? "active" : ""} onClick={() => setView(item.key)}>
+                <button type="button" className={view === item.key ? "active" : ""} onClick={() => selectView(item.key)}>
                   {item.icon}
                   {item.label}
                 </button>
@@ -5355,12 +5416,12 @@ function AdminApp() {
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
   const [activeModules, setActiveModules] = useState<Record<string, boolean>>({});
   const [companyLoadError, setCompanyLoadError] = useState("");
-  const [masterMode, setMasterMode] = useState(() => session?.user.role === "super_admin");
+  const [masterMode, setMasterMode] = useState(() => session?.user.role === "super_admin" && adminLocation().mode !== "company");
   const [subscriptionGate, setSubscriptionGate] = useState<Record<string, unknown> | null>(null);
 
   useEffect(() => {
     if (!session) return;
-    if (session.user.role === "super_admin") setMasterMode(true);
+    if (session.user.role === "super_admin") setMasterMode(adminLocation().mode !== "company");
     setCompanyLoadError("");
     api(session, "/api/resources/companies")
       .then(data => {
@@ -5371,8 +5432,10 @@ function AdminApp() {
           return;
         }
         const savedCompanyId = localStorage.getItem("vib-selected-company-id");
+        const locationCompanyId = adminLocation().companyId;
         const companyExists = (id: string | null) => id && data.some((company: Record<string, unknown>) => String(company.id) === id);
         const nextCompanyId =
+          (companyExists(locationCompanyId) && locationCompanyId) ||
           (companyExists(savedCompanyId) && savedCompanyId) ||
           (companyExists(session.user.companyId) && session.user.companyId) ||
           String(data[0]?.id || "");
@@ -5425,10 +5488,12 @@ function AdminApp() {
         selectedCompanyId={selectedCompanyId}
         onCompanyChange={companyId => {
           localStorage.setItem("vib-selected-company-id", companyId);
+          updateAdminLocation({ company: companyId });
           setSelectedCompanyId(companyId);
         }}
         onConnectCompany={companyId => {
           localStorage.setItem("vib-selected-company-id", companyId);
+          updateAdminLocation({ adminMode: "company", company: companyId, view: "dashboard", masterTab: null });
           setSelectedCompanyId(companyId);
           setMasterMode(false);
         }}
@@ -5480,6 +5545,7 @@ function AdminApp() {
         activeModules={activeModules}
         onCompanyChange={companyId => {
           localStorage.setItem("vib-selected-company-id", companyId);
+          updateAdminLocation({ company: companyId });
           setSelectedCompanyId(companyId);
         }}
         onCompanySaved={updatedCompany => {
@@ -5487,7 +5553,10 @@ function AdminApp() {
             current.map(company => (String(company.id) === String(updatedCompany.id) ? updatedCompany : company))
           );
         }}
-        onBackToMaster={session.user.role === "super_admin" ? () => setMasterMode(true) : undefined}
+        onBackToMaster={session.user.role === "super_admin" ? () => {
+          updateAdminLocation({ adminMode: "master", masterTab: "companies", view: null });
+          setMasterMode(true);
+        } : undefined}
         onLogout={() => {
           localStorage.removeItem("vib-session");
           setSession(null);
