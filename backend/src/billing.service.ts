@@ -12,6 +12,7 @@ import { request } from "node:https";
 import { URL } from "node:url";
 import { PrismaService } from "./prisma.service";
 import { AuthUser } from "./types";
+import { billingAmounts } from "./billing-amounts";
 
 type AnyRecord = Record<string, any>;
 type EfiRuntimeConfig = {
@@ -392,12 +393,28 @@ export class BillingService implements OnModuleInit {
 
   async listInvoices(user: AuthUser, companyId?: string) {
     const scopedCompanyId = this.scopedCompanyId(user, companyId);
-    return this.prisma.billingInvoice.findMany({
+    const invoices = await this.prisma.billingInvoice.findMany({
       where: scopedCompanyId ? { companyId: scopedCompanyId } : {},
       include: { company: true, plan: true, subscription: true },
       orderBy: { dueDate: "desc" },
       take: 200
     });
+    return invoices.map(invoice => this.invoiceForPayment(invoice));
+  }
+
+  private invoiceForPayment(invoice: any) {
+    const amounts = billingAmounts(invoice);
+    const payload = invoice.providerPayload as AnyRecord | null;
+    const calendar = payload?.charge?.calendario;
+    const expiresAt = calendar ? Date.parse(calendar.criacao) + Number(calendar.expiracao) * 1000 : NaN;
+    const pixExpired = invoice.paymentMethod === "pix" && Boolean(invoice.txId) &&
+      (!Number.isFinite(expiresAt) || expiresAt <= Date.now() || Number(payload?.charge?.valor?.original) !== amounts.payableValue);
+    return {
+      ...invoice, ...amounts,
+      status: amounts.daysLate ? "overdue" : invoice.status,
+      pixExpired,
+      ...(pixExpired ? { paymentUrl: null, pixCopyPaste: null, pixQrCodeImage: null } : {})
+    };
   }
 
   async billingConfig(user: AuthUser) {
@@ -563,7 +580,7 @@ export class BillingService implements OnModuleInit {
       const overdueUpdate = await this.prisma.billingInvoice.updateMany({
         where: {
           status: { in: ["open", "pending", "failed"] },
-          dueDate: { lt: this.dayStart(cutoff) }
+          dueDate: { lt: this.dayStart(now) }
         },
         data: { status: "overdue" }
       });
@@ -571,7 +588,8 @@ export class BillingService implements OnModuleInit {
       const overdueCompanies = await this.prisma.billingInvoice.findMany({
         where: {
           status: "overdue",
-          paidAt: null
+          paidAt: null,
+          dueDate: { lt: this.dayStart(cutoff) }
         },
         select: { companyId: true },
         distinct: ["companyId"]
@@ -876,21 +894,41 @@ export class BillingService implements OnModuleInit {
 
   async generatePix(id: string, user: AuthUser) {
     const invoice = await this.getInvoiceOrThrow(id, user);
-    if (invoice.status === "paid") throw new BadRequestException("Fatura ja esta paga.");
+    if (invoice.paidAt || ["paid", "canceled", "failed"].includes(invoice.status)) throw new BadRequestException("Esta fatura nao pode gerar Pix.");
+    if (invoice.providerChargeId) throw new BadRequestException("Esta fatura possui boleto. Consulte o boleto antes de emitir outro meio de pagamento.");
 
     const config = await this.efiConfig();
     const token = await this.efiToken(config);
-    const value = this.money(invoice.value);
+    const amounts = billingAmounts(invoice);
+    const value = this.money(amounts.payableValue);
+    let existing: AnyRecord | null = null;
+    if (invoice.txId) {
+      existing = await this.requestJson<AnyRecord>(`${config.pixBaseUrl}/v2/cob/${invoice.txId}`, {
+        method: "GET", certPath: config.certPath, certPassphrase: config.certPassphrase,
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (existing.status === "CONCLUIDA") {
+        const paid = await this.prisma.billingInvoice.update({ where: { id }, data: { status: "paid", paidAt: new Date(), providerPayload: { ...(invoice.providerPayload as AnyRecord || {}), charge: existing } } });
+        await this.refreshCompanySubscriptionStatus(invoice.companyId);
+        return this.invoiceForPayment(paid);
+      }
+      if (existing.status !== "ATIVA") throw new BadRequestException("Pix removido na Efi. Revise a cobranca antes de reemitir.");
+    }
+    // Reuse the bank transaction so retries and delayed webhooks still identify this debt.
+    const today = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+    const secondsUntilMidnight = Math.max(1, Math.floor((Date.parse(`${today}T00:00:00-03:00`) + 86400000 - Date.now()) / 1000));
+    const lifetime = Math.min(secondsUntilMidnight, Math.max(1, Number(process.env.EFI_PIX_EXPIRATION_SECONDS || 86400)));
+    const elapsed = existing ? Math.max(0, Math.ceil((Date.now() - Date.parse(existing.calendario.criacao)) / 1000)) : 0;
     const charge = await this.requestJson<AnyRecord>(
-      `${config.pixBaseUrl}/v2/cob`,
+      `${config.pixBaseUrl}/v2/cob${invoice.txId ? `/${invoice.txId}` : ""}`,
       {
-        method: "POST",
+        method: invoice.txId ? "PATCH" : "POST",
         certPath: config.certPath,
         certPassphrase: config.certPassphrase,
         headers: { Authorization: `Bearer ${token}` }
       },
       {
-        calendario: { expiracao: Number(process.env.EFI_PIX_EXPIRATION_SECONDS || 86400) },
+        calendario: { expiracao: elapsed + lifetime },
         valor: { original: value },
         chave: config.pixKey,
         solicitacaoPagador: invoice.detail.slice(0, 140)
@@ -910,10 +948,10 @@ export class BillingService implements OnModuleInit {
         )
       : {};
 
-    return this.prisma.billingInvoice.update({
+    const updated = await this.prisma.billingInvoice.update({
       where: { id: invoice.id },
       data: {
-        status: "pending",
+        status: amounts.daysLate ? "overdue" : "pending",
         paymentMethod: "pix",
         provider: "efi",
         txId: charge.txid ? String(charge.txid) : invoice.txId,
@@ -921,10 +959,11 @@ export class BillingService implements OnModuleInit {
         pixCopyPaste: String(qr.qrcode || charge.pixCopiaECola || ""),
         pixQrCodeImage: String(qr.imagemQrcode || ""),
         paymentUrl: String(qr.linkVisualizacao || invoice.paymentUrl || ""),
-        providerPayload: { charge, qr }
+        providerPayload: { ...(invoice.providerPayload as AnyRecord || {}), charge, qr, chargedAmounts: amounts }
       },
       include: { company: true, plan: true, subscription: true }
     });
+    return this.invoiceForPayment(updated);
   }
 
   async generateBoleto(id: string, user: AuthUser) {
@@ -935,6 +974,9 @@ export class BillingService implements OnModuleInit {
     }
     if (invoice.providerChargeId && invoice.paymentMethod === "boleto" && this.activeInvoiceStatuses().includes(invoice.status)) {
       throw new BadRequestException("Esta fatura ja possui boleto gerado. Use o link/PDF existente ou cancele o boleto antes de gerar outro.");
+    }
+    if (billingAmounts(invoice).daysLate) {
+      throw new BadRequestException("O vencimento original ja passou. Pague esta mesma fatura por Pix atualizado com encargos. Um novo boleto exige uma reemissao acordada com o master; o vencimento da divida nao sera alterado automaticamente.");
     }
     const duplicate = await this.findActiveDuplicateInvoice(invoice.companyId, this.money(invoice.value), invoice.dueDate, invoice.id);
     if (duplicate) throw new BadRequestException(this.duplicateInvoiceMessage(duplicate));
@@ -960,7 +1002,9 @@ export class BillingService implements OnModuleInit {
           customer: this.boletoCustomer(invoice.company as AnyRecord),
           expire_at: this.dateOnly(invoice.dueDate),
           configurations: {
-            days_to_write_off: daysToWriteOff
+            days_to_write_off: daysToWriteOff,
+            fine: 200,
+            interest: { value: 100, type: "monthly" }
           },
           message: "Assinatura da plataforma Vib"
         }
@@ -1057,9 +1101,9 @@ export class BillingService implements OnModuleInit {
   private invoiceStatusFromEfi(status: string, dueDate?: Date): "pending" | "paid" | "overdue" | "canceled" | "expired" | "failed" | null {
     const current = status.toLowerCase();
     if (["paid", "settled"].includes(current)) return "paid";
-    if (["waiting", "new", "link"].includes(current)) return "pending";
+    if (["waiting", "new", "link"].includes(current)) return dueDate && billingAmounts({ value: 1, dueDate, status: "open" }).daysLate ? "overdue" : "pending";
     if (["canceled", "cancelled"].includes(current)) return "canceled";
-    if (current === "expired") return "expired";
+    if (current === "expired") return "overdue";
     if (["refunded", "chargeback", "contested"].includes(current)) return "failed";
     if (current === "unpaid") {
       return dueDate && dueDate < this.dayStart(new Date()) ? "overdue" : "pending";
@@ -1082,7 +1126,7 @@ export class BillingService implements OnModuleInit {
           data: {
             status: "paid",
             paidAt: item.horario ? new Date(String(item.horario)) : new Date(),
-            providerPayload: { webhook: body }
+            providerPayload: { ...(invoice.providerPayload as AnyRecord || {}), webhook: body }
           }
         })
       );

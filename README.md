@@ -1,5 +1,17 @@
 # Correacloud SaaS
 
+## Cobranca vencida (03/09/2026)
+
+- Expiracao do Pix nao extingue a divida. Preserve o valor principal e o vencimento original.
+- Encargos confirmados: multa unica de 2% e juros simples de 1% ao mes, pro rata em 30 dias. O backend calcula em centavos e expoe principal, multa, juros e total separadamente.
+- Datas de vencimento sao datas UTC de calendario; a contagem dos dias usa America/Sao_Paulo. Nao exibir uma data UTC como o dia anterior no navegador.
+- Carencia de 7 dias afeta somente o bloqueio, nao o inicio do atraso.
+- Renovacao do Pix consulta a Efi antes de revisar o mesmo txid, preservando a conciliacao. Pagamento ja concluido nao pode gerar nova cobranca.
+- O painel oculta links Pix expirados/desatualizados e oferece Atualizar Pix. Nao apague faturas nem marque pago para corrigir QR expirado.
+- Novos boletos incluem multa de 2% e juros mensais de 1%. Emissao retroativa exige reemissao acordada; para divida ja vencida sem boleto, usar Pix atualizado. O ciclo ainda cria faturas locais, nao boletos automaticamente.
+- Teste: apos build do backend, executar `node tests/billing-amounts.cjs`.
+- Referencias: https://dev.efipay.com.br/docs/api-pix/cobrancas-imediatas/ e https://dev.efipay.com.br/docs/api-cobrancas/boleto/.
+
 Repositorio principal da plataforma multitenant. Esta arvore e a fonte oficial para build e deploy; alteracoes feitas diretamente no servidor devem ser trazidas para o Git antes de qualquer rebuild.
 
 ## Estado atual

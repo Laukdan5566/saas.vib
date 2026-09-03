@@ -3073,11 +3073,13 @@ function PlatformBillingPage({
             <article className="billingInvoiceRow" key={String(invoice.id)}>
               <div className="billingInvoiceSummary">
                 <strong>{String(invoice.detail || "Fatura")}</strong>
-                <span>Vencimento {new Date(String(invoice.dueDate)).toLocaleDateString("pt-BR")} - {String(invoice.status)}</span>
+                <span>Vencimento {new Date(String(invoice.dueDate)).toLocaleDateString("pt-BR", { timeZone: "UTC" })} - {invoiceStatus === "overdue" ? "Vencida" : invoiceStatus}</span>
+                {Boolean(invoice.pixExpired) && <span>Pix expirado ou desatualizado. A divida continua em aberto.</span>}
               </div>
               <div className="billingInvoiceValue">
                 <span>Valor</span>
-                <strong>{money(invoice.value)}</strong>
+                <strong>{money(invoice.payableValue ?? invoice.value)}</strong>
+                {Number(invoice.daysLate) > 0 && <small>Original: {money(invoice.value)}<br />Multa: {money(invoice.fineValue)}<br />Juros: {money(invoice.interestValue)} ({String(invoice.daysLate)} dias)</small>}
               </div>
               {Boolean(invoice.pixCopyPaste) && (
                 <label className="pixCopyField pixCopy">
@@ -3103,7 +3105,7 @@ function PlatformBillingPage({
                 <div className="pixQrPlaceholder" />
               )}
               <div className="financialOrderActions">
-                {canGeneratePix && <button type="button" onClick={() => invoiceAction(invoice, "pix")} disabled={saving === String(invoice.id)}>Gerar Pix</button>}
+                {canGeneratePix && <button type="button" onClick={() => invoiceAction(invoice, "pix")} disabled={saving === String(invoice.id)}>{saving === String(invoice.id) ? "Processando..." : invoice.pixExpired ? "Atualizar Pix" : "Gerar Pix"}</button>}
                 {canGeneratePayment && !hasActiveBoleto && <button type="button" onClick={() => invoiceAction(invoice, "boleto")} disabled={saving === String(invoice.id)}>Gerar boleto</button>}
                 {isSuperAdmin && hasActiveBoleto && <button type="button" onClick={() => invoiceAction(invoice, "refresh")} disabled={saving === String(invoice.id)}>Atualizar boleto</button>}
                 {canCancelBoleto && <button type="button" className="dangerAction" onClick={() => invoiceAction(invoice, "cancel")} disabled={saving === String(invoice.id)}>Cancelar boleto</button>}
