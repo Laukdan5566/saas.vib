@@ -176,7 +176,7 @@ export class BillingService implements OnModuleInit {
   }
 
   private graceDays() {
-    return Math.max(0, Number(process.env.BILLING_GRACE_DAYS || 13));
+    return Math.max(0, Number(process.env.BILLING_GRACE_DAYS || 7));
   }
 
   private generateDaysAhead() {
