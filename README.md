@@ -12,6 +12,14 @@
 - Teste: apos build do backend, executar `node tests/billing-amounts.cjs`.
 - Referencias: https://dev.efipay.com.br/docs/api-pix/cobrancas-imediatas/ e https://dev.efipay.com.br/docs/api-cobrancas/boleto/.
 
+## Fonte de cobranca externa: Compasso
+
+- O Compasso e a fonte unica para novas faturas, Pix/Bolix, conciliacao e situacao financeira das empresas do SaaS.
+- Configure `COMPASSO_API_URL` e `COMPASSO_API_TOKEN` somente no `.env` do servidor. Nunca versionar o token.
+- O SaaS consulta `GET /api/integrations/saas/companies/{companyId}/status`; o UUID da empresa e o `externalId` estavel.
+- Somente `blocked` bloqueia. `paid`, `open`, `overdue` e `in_grace` preservam o acesso. Em indisponibilidade, o SaaS usa cache breve e falha aberto.
+- Mantenha `BILLING_AUTOMATION_ENABLED=false` e `BILLING_LOCAL_WRITES_ENABLED=false`. O historico antigo permanece somente leitura; webhooks antigos podem ficar ativos ate a conciliacao final da migracao.
+
 Repositorio principal da plataforma multitenant. Esta arvore e a fonte oficial para build e deploy; alteracoes feitas diretamente no servidor devem ser trazidas para o Git antes de qualquer rebuild.
 
 ## Estado atual

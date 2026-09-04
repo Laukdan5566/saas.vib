@@ -13,6 +13,7 @@ import { URL } from "node:url";
 import { PrismaService } from "./prisma.service";
 import { AuthUser } from "./types";
 import { billingAmounts } from "./billing-amounts";
+import { isCompassoStatus, mapCompassoAccess } from "./compasso-status";
 
 type AnyRecord = Record<string, any>;
 type EfiRuntimeConfig = {
@@ -29,6 +30,7 @@ type EfiRuntimeConfig = {
 @Injectable()
 export class BillingService implements OnModuleInit {
   private billingCycleRunning = false;
+  private compassoCache = new Map<string, { data: AnyRecord; expiresAt: number }>();
 
   constructor(private readonly prisma: PrismaService) {}
 
@@ -42,6 +44,12 @@ export class BillingService implements OnModuleInit {
   private requireSuperAdmin(user: AuthUser) {
     if (user.role !== UserRole.super_admin) {
       throw new ForbiddenException("Apenas super admin pode gerenciar cobrancas da plataforma.");
+    }
+  }
+
+  private requireLocalBillingWrites() {
+    if (process.env.BILLING_LOCAL_WRITES_ENABLED === "false") {
+      throw new BadRequestException("Cobranca gerenciada externamente pelo Compasso.");
     }
   }
 
@@ -351,10 +359,59 @@ export class BillingService implements OnModuleInit {
     const scopedCompanyId = this.scopedCompanyId(user, companyId);
     if (!scopedCompanyId) throw new BadRequestException("Empresa nao informada.");
 
-    return this.prisma.companySubscription.findUnique({
+    const subscription = await this.prisma.companySubscription.findUnique({
       where: { companyId: scopedCompanyId },
       include: { company: true, plan: true }
     });
+    if (!process.env.COMPASSO_API_URL || !process.env.COMPASSO_API_TOKEN) return subscription;
+
+    const external = await this.compassoCompanyStatus(scopedCompanyId);
+    const access = mapCompassoAccess(external.status);
+    return {
+      ...(subscription || { companyId: scopedCompanyId }),
+      ...access,
+      billingSource: "compasso",
+      externalBilling: external
+    };
+  }
+
+  private async compassoCompanyStatus(companyId: string) {
+    const cached = this.compassoCache.get(companyId);
+    if (cached && cached.expiresAt > Date.now()) return cached.data;
+    const base = String(process.env.COMPASSO_API_URL).replace(/\/$/, "");
+    const url = new URL(`${base}/api/integrations/saas/companies/${encodeURIComponent(companyId)}/status`);
+    const data = await new Promise<AnyRecord>((resolve, reject) => {
+      const req = request({
+        protocol: url.protocol,
+        hostname: url.hostname,
+        port: url.port || 443,
+        path: `${url.pathname}${url.search}`,
+        method: "GET",
+        headers: { Accept: "application/json", Authorization: `Bearer ${process.env.COMPASSO_API_TOKEN}` },
+        timeout: 5000
+      }, response => {
+        const chunks: Buffer[] = [];
+        response.on("data", chunk => chunks.push(Buffer.from(chunk)));
+        response.on("end", () => {
+          try {
+            const parsed = JSON.parse(Buffer.concat(chunks).toString("utf8"));
+            if ((response.statusCode || 500) >= 400) return reject(new Error(`Compasso HTTP ${response.statusCode}`));
+            if (parsed.externalId !== companyId || !isCompassoStatus(parsed.status)) return reject(new Error("Resposta invalida do Compasso"));
+            resolve(parsed);
+          } catch (error) { reject(error); }
+        });
+      });
+      req.on("timeout", () => req.destroy(new Error("Timeout do Compasso")));
+      req.on("error", reject);
+      req.end();
+    }).catch(error => {
+      const stale = this.compassoCache.get(companyId);
+      if (stale && stale.expiresAt + 10 * 60_000 > Date.now()) return { ...stale.data, stale: true };
+      console.error("[compasso-status]", error instanceof Error ? error.message : "Falha desconhecida");
+      return { externalId: companyId, status: "open", unavailable: true };
+    });
+    this.compassoCache.set(companyId, { data, expiresAt: Date.now() + 60_000 });
+    return data;
   }
 
   async upsertSubscription(data: AnyRecord, user: AuthUser) {
@@ -518,6 +575,9 @@ export class BillingService implements OnModuleInit {
   }
 
   async processBillingCycle() {
+    if (process.env.BILLING_LOCAL_WRITES_ENABLED === "false") {
+      return { ok: true, external: true, createdInvoices: 0, markedOverdue: 0, blockedCompanies: 0 };
+    }
     if (this.billingCycleRunning) return { ok: true, skipped: true };
     this.billingCycleRunning = true;
     try {
@@ -622,6 +682,7 @@ export class BillingService implements OnModuleInit {
   }
 
   async createInvoice(data: AnyRecord, user: AuthUser) {
+    this.requireLocalBillingWrites();
     this.requireSuperAdmin(user);
     const companyId = String(data.companyId || "");
     if (!companyId) throw new BadRequestException("Informe a empresa.");
@@ -656,6 +717,7 @@ export class BillingService implements OnModuleInit {
   }
 
   async updateInvoice(id: string, data: AnyRecord, user: AuthUser) {
+    this.requireLocalBillingWrites();
     this.requireSuperAdmin(user);
     await this.getInvoiceOrThrow(id, user);
 
@@ -673,6 +735,7 @@ export class BillingService implements OnModuleInit {
   }
 
   async markPaid(id: string, user: AuthUser) {
+    this.requireLocalBillingWrites();
     this.requireSuperAdmin(user);
     const invoice = await this.getInvoiceOrThrow(id, user);
     const updated = await this.prisma.billingInvoice.update({
@@ -893,6 +956,7 @@ export class BillingService implements OnModuleInit {
   }
 
   async generatePix(id: string, user: AuthUser) {
+    this.requireLocalBillingWrites();
     const invoice = await this.getInvoiceOrThrow(id, user);
     if (invoice.paidAt || ["paid", "canceled", "failed"].includes(invoice.status)) throw new BadRequestException("Esta fatura nao pode gerar Pix.");
     if (invoice.providerChargeId) throw new BadRequestException("Esta fatura possui boleto. Consulte o boleto antes de emitir outro meio de pagamento.");
@@ -967,6 +1031,7 @@ export class BillingService implements OnModuleInit {
   }
 
   async generateBoleto(id: string, user: AuthUser) {
+    this.requireLocalBillingWrites();
     const invoice = await this.getInvoiceOrThrow(id, user);
     if (invoice.status === "paid") throw new BadRequestException("Fatura ja esta paga.");
     if (["canceled", "expired"].includes(String(invoice.status))) {

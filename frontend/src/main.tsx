@@ -5520,7 +5520,9 @@ function AdminApp() {
   const billingLocked =
     session.user.role !== "super_admin" &&
     Boolean(subscriptionGate) &&
-    ["past_due", "suspended", "canceled"].includes(subscriptionStatus);
+    (subscriptionGate?.billingSource === "compasso"
+      ? Boolean(subscriptionGate.accessBlocked)
+      : ["past_due", "suspended", "canceled"].includes(subscriptionStatus));
 
   if (selectedCompany && selectedCompanyId && billingLocked) {
     return (
