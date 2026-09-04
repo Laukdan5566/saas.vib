@@ -10,6 +10,7 @@ import { createCipheriv, createDecipheriv, createHash, randomBytes, randomUUID }
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { request } from "node:https";
 import { URL } from "node:url";
+import QRCode from "qrcode";
 import { PrismaService } from "./prisma.service";
 import { AuthUser } from "./types";
 import { billingAmounts } from "./billing-amounts";
@@ -365,13 +366,22 @@ export class BillingService implements OnModuleInit {
     });
     if (!process.env.COMPASSO_API_URL || (!process.env.COMPASSO_API_TOKEN && !process.env.COMPASSO_API_TOKEN_FILE)) return subscription;
 
-    const external = await this.compassoCompanyStatus(scopedCompanyId);
+    const external: AnyRecord = await this.compassoCompanyStatus(scopedCompanyId);
+    const externalPayment = external.payment as AnyRecord | null | undefined;
+    const payment = externalPayment && !externalPayment.stale
+      ? {
+          ...externalPayment,
+          qrCodeImage: externalPayment.pixCopyPaste
+            ? await QRCode.toDataURL(String(externalPayment.pixCopyPaste), { margin: 1, width: 240 })
+            : null
+        }
+      : null;
     const access = mapCompassoAccess(external.status);
     return {
       ...(subscription || { companyId: scopedCompanyId }),
       ...access,
       billingSource: "compasso",
-      externalBilling: external
+      externalBilling: { ...external, payment }
     };
   }
 

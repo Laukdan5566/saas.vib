@@ -2951,6 +2951,8 @@ function PlatformBillingPage({
   const openTotal = openInvoices.reduce((sum, invoice) => sum + Number(invoice.value || 0), 0);
   const paidTotal = paidInvoices.reduce((sum, invoice) => sum + Number(invoice.value || 0), 0);
   const currentPlan = subscription?.plan as Record<string, unknown> | undefined;
+  const externalBilling = subscription?.externalBilling as Record<string, unknown> | undefined;
+  const externalPayment = externalBilling?.payment as Record<string, unknown> | undefined;
 
   return (
     <section className="restaurantPage billingPage">
@@ -3051,8 +3053,33 @@ function PlatformBillingPage({
       )}
 
       <section className="paymentPanel billingInvoices">
-        <h3>{isSuperAdmin ? "Faturas" : "Cobranca em aberto"}</h3>
-        {visibleInvoices.length === 0 ? (
+        <h3>{externalBilling ? "Cobranca em aberto" : isSuperAdmin ? "Faturas" : "Cobranca em aberto"}</h3>
+        {externalPayment ? (
+          <article className="billingInvoiceRow externalBillingInvoice">
+            <div className="billingInvoiceSummary">
+              <strong>Assinatura da plataforma</strong>
+              <span>Vencimento {String(externalBilling?.dueDate || "").split("-").reverse().join("/")} - {String(externalBilling?.status)}</span>
+            </div>
+            <div className="billingInvoiceValue">
+              <span>Valor atualizado</span>
+              <strong>{money(Number(externalPayment.amountCents || 0) / 100)}</strong>
+            </div>
+            {Boolean(externalPayment.pixCopyPaste) && (
+              <label className="pixCopyField pixCopy">
+                Pix copia e cola
+                <textarea readOnly value={String(externalPayment.pixCopyPaste)} onFocus={event => event.currentTarget.select()} />
+              </label>
+            )}
+            {Boolean(externalPayment.paymentUrl) && (
+              <div className="billingInvoiceLinks">
+                <a href={String(externalPayment.paymentUrl)} target="_blank" rel="noreferrer">Abrir na Efí</a>
+              </div>
+            )}
+            {Boolean(externalPayment.qrCodeImage) && <img className="pixQrImage" src={String(externalPayment.qrCodeImage)} alt="QR Code Pix da cobranca" />}
+          </article>
+        ) : externalBilling ? (
+          <p>{externalBilling.status === "paid" ? "Pagamento confirmado. Nao ha cobranca em aberto." : "A cobranca ainda nao possui um meio de pagamento disponivel."}</p>
+        ) : visibleInvoices.length === 0 ? (
           <p>{isSuperAdmin ? "Nenhuma fatura cadastrada para esta empresa." : "Nao ha cobranca em aberto no momento."}</p>
         ) : (
           visibleInvoices.map(invoice => {
