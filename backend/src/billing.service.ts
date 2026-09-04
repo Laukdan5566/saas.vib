@@ -10,7 +10,7 @@ import { createCipheriv, createDecipheriv, createHash, randomBytes, randomUUID }
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { request } from "node:https";
 import { URL } from "node:url";
-import QRCode from "qrcode";
+import * as QRCode from "qrcode";
 import { PrismaService } from "./prisma.service";
 import { AuthUser } from "./types";
 import { billingAmounts } from "./billing-amounts";
