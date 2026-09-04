@@ -363,7 +363,7 @@ export class BillingService implements OnModuleInit {
       where: { companyId: scopedCompanyId },
       include: { company: true, plan: true }
     });
-    if (!process.env.COMPASSO_API_URL || !process.env.COMPASSO_API_TOKEN) return subscription;
+    if (!process.env.COMPASSO_API_URL || (!process.env.COMPASSO_API_TOKEN && !process.env.COMPASSO_API_TOKEN_FILE)) return subscription;
 
     const external = await this.compassoCompanyStatus(scopedCompanyId);
     const access = mapCompassoAccess(external.status);
@@ -378,6 +378,7 @@ export class BillingService implements OnModuleInit {
   private async compassoCompanyStatus(companyId: string) {
     const cached = this.compassoCache.get(companyId);
     if (cached && cached.expiresAt > Date.now()) return cached.data;
+    const token = this.compassoApiToken();
     const base = String(process.env.COMPASSO_API_URL).replace(/\/$/, "");
     const url = new URL(`${base}/api/integrations/saas/companies/${encodeURIComponent(companyId)}/status`);
     const data = await new Promise<AnyRecord>((resolve, reject) => {
@@ -387,7 +388,7 @@ export class BillingService implements OnModuleInit {
         port: url.port || 443,
         path: `${url.pathname}${url.search}`,
         method: "GET",
-        headers: { Accept: "application/json", Authorization: `Bearer ${process.env.COMPASSO_API_TOKEN}` },
+        headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
         timeout: 5000
       }, response => {
         const chunks: Buffer[] = [];
@@ -412,6 +413,15 @@ export class BillingService implements OnModuleInit {
     });
     this.compassoCache.set(companyId, { data, expiresAt: Date.now() + 60_000 });
     return data;
+  }
+
+  private compassoApiToken() {
+    const file = String(process.env.COMPASSO_API_TOKEN_FILE || "");
+    const source = file && existsSync(file) ? readFileSync(file, "utf8") : String(process.env.COMPASSO_API_TOKEN || "");
+    const first = source.split(/\r?\n/).map(line => line.trim()).find(Boolean) || "";
+    const token = first.includes(":") ? first.split(":", 2)[1].trim() : first;
+    if (token.length < 20) throw new Error("Token do Compasso ausente ou invalido");
+    return token;
   }
 
   async upsertSubscription(data: AnyRecord, user: AuthUser) {
