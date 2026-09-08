@@ -1141,6 +1141,23 @@ function dateInput(value: unknown) {
   return date.toISOString().slice(0, 10);
 }
 
+function localDateKey(value: unknown = new Date()) {
+  const date = value instanceof Date ? value : new Date(String(value));
+  if (Number.isNaN(date.getTime())) return "";
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).format(date);
+}
+
+function shortDateLabel(value: string) {
+  if (!value) return "";
+  const [year, month, day] = value.split("-");
+  return `${day}/${month}/${year}`;
+}
+
 function orderDisplayNumber(order: Record<string, unknown>) {
   return String(order.displayNumber || `#${String(order.id || "").slice(0, 8)}`);
 }
@@ -1214,6 +1231,7 @@ function RestaurantOrdersBoard({
   const [selectedDeliveryPersons, setSelectedDeliveryPersons] = useState<Record<string, string>>({});
   const [assigningDeliveryId, setAssigningDeliveryId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  const [boardDate, setBoardDate] = useState(() => localDateKey());
   const [error, setError] = useState("");
   const [editingOrder, setEditingOrder] = useState<Record<string, unknown> | null>(null);
   const [editForm, setEditForm] = useState<Record<string, string>>({});
@@ -1503,9 +1521,10 @@ function RestaurantOrdersBoard({
     );
   }
 
+  const normalizedQuery = query.trim().toLowerCase();
   const filtered = orders.filter(order => {
     const text = `${order.id} ${order.customerName} ${order.customerPhone} ${order.orderType} ${order.status}`.toLowerCase();
-    return text.includes(query.toLowerCase());
+    return text.includes(normalizedQuery);
   });
 
   const columns = [
@@ -1556,6 +1575,11 @@ function RestaurantOrdersBoard({
             placeholder={isBarbershop ? "Busque por cliente, telefone ou atendimento" : "Busque por cliente ou numero do pedido"}
           />
         </label>
+        <label className="restaurantDateFilter" title="Data exibida na coluna de pedidos finalizados">
+          <CalendarDays />
+          <span>Finalizados</span>
+          <input type="date" value={boardDate} onChange={event => setBoardDate(event.target.value || localDateKey())} />
+        </label>
         <span className="liveUpdateBadge">
           Ao vivo{lastUpdatedAt ? ` - ${lastUpdatedAt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}` : ""}
         </span>
@@ -1566,7 +1590,11 @@ function RestaurantOrdersBoard({
       {error && <div className="error">{error}</div>}
       <div className="orderBoard">
         {columns.map(column => {
-          const columnOrders = filtered.filter(order => column.statuses.includes(String(order.status)));
+          const columnOrders = filtered.filter(order => {
+            if (!column.statuses.includes(String(order.status))) return false;
+            if (column.key !== "ready" || normalizedQuery) return true;
+            return localDateKey(order.createdAt) === boardDate;
+          });
           return (
             <section className={`orderColumn ${column.className}`} key={column.key}>
               <header>
@@ -1591,7 +1619,7 @@ function RestaurantOrdersBoard({
                     <article className="restaurantOrderCard" key={String(order.id)}>
                       <div>
                         <strong>{orderDisplayNumber(order)} - {String(order.customerName || "Cliente")}</strong>
-                        <span>{orderTypeText(order)} - {String(order.customerPhone || "sem telefone")}</span>
+                        <span>{orderTypeText(order)} - {String(order.customerPhone || "sem telefone")} - {shortDateLabel(localDateKey(order.createdAt))}</span>
                       </div>
                       <p>{String(order.notes || "Sem observacoes.")}</p>
                       <strong>{money(order.total)}</strong>
@@ -2462,12 +2490,12 @@ function RestaurantFinancialPage({
   paymentMethods: Record<string, unknown>[];
   onOrdersChanged: (orders: Record<string, unknown>[]) => void;
 }) {
-  const today = new Date().toLocaleDateString("pt-BR");
   const [error, setError] = useState("");
   const [editingOrder, setEditingOrder] = useState<Record<string, unknown> | null>(null);
   const [editForm, setEditForm] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [query, setQuery] = useState("");
+  const [selectedDate, setSelectedDate] = useState(() => localDateKey());
 
   async function refreshOrders() {
     const loadedOrders = await api(session, `/api/resources/orders?companyId=${companyId}`);
@@ -2559,8 +2587,8 @@ function RestaurantFinancialPage({
     }
   }
 
-  const todayOrders = orders.filter(order => new Date(String(order.createdAt)).toLocaleDateString("pt-BR") === today);
-  const closedOrders = todayOrders.filter(order => ["completed", "delivered", "canceled"].includes(String(order.status)));
+  const selectedDateOrders = orders.filter(order => localDateKey(order.createdAt) === selectedDate);
+  const closedOrders = selectedDateOrders.filter(order => ["completed", "delivered", "canceled"].includes(String(order.status)));
   const paidOrders = closedOrders.filter(order => String(order.status) !== "canceled");
   const canceledOrders = closedOrders.filter(order => String(order.status) === "canceled");
   const total = paidOrders.reduce((sum, order) => sum + Number(order.total || 0), 0);
@@ -2582,12 +2610,20 @@ function RestaurantFinancialPage({
       <header className="restaurantSectionHeader">
         <div>
           <h2>Financeiro</h2>
-          <p>Fechamento do dia, pedidos finalizados e cancelamentos.</p>
+          <p>Fechamento de {shortDateLabel(selectedDate)}, pedidos finalizados e cancelamentos.</p>
+        </div>
+        <div className="financialDateControls">
+          <label>
+            <CalendarDays />
+            Data
+            <input type="date" value={selectedDate} onChange={event => setSelectedDate(event.target.value || localDateKey())} />
+          </label>
+          {selectedDate !== localDateKey() && <button type="button" onClick={() => setSelectedDate(localDateKey())}>Hoje</button>}
         </div>
       </header>
       {error && <div className="error">{error}</div>}
       <div className="financeGrid">
-        <article><span>Faturamento hoje</span><strong>{money(total)}</strong></article>
+        <article><span>Faturamento em {shortDateLabel(selectedDate)}</span><strong>{money(total)}</strong></article>
         <article><span>Pedidos pagos</span><strong>{paidOrders.length}</strong></article>
         <article><span>Ticket medio</span><strong>{money(average)}</strong></article>
         <article><span>Delivery pago</span><strong>{money(deliveryTotal)}</strong></article>
@@ -2598,7 +2634,7 @@ function RestaurantFinancialPage({
         <header>
           <div>
             <h3>Pedidos do financeiro</h3>
-            <p>Entram aqui pedidos finalizados, entregues ou cancelados de hoje. Cancelados nao somam no faturamento.</p>
+            <p>Pedidos finalizados, entregues ou cancelados em {shortDateLabel(selectedDate)}. Cancelados nao somam no faturamento.</p>
           </div>
           <label className="restaurantSearch compact">
             <Search />
@@ -2654,7 +2690,7 @@ function RestaurantFinancialPage({
       <section className="paymentPanel">
         <h3>Recebido por forma de pagamento</h3>
         {Object.keys(paymentSummary).length === 0 ? (
-          <p>Nenhum pagamento contabilizado hoje.</p>
+          <p>Nenhum pagamento contabilizado nesta data.</p>
         ) : (
           Object.entries(paymentSummary).map(([method, value]) => (
             <div className="paymentRow" key={method}>

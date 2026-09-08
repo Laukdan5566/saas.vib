@@ -1506,3 +1506,13 @@ Quando alguem trabalhar no projeto com Codex:
 - Validacao concluida: `POST /backend/integrations/webhook` com `action=whatsapp_status` retorna HTTP 200 para a conexao `23`, com status `CONNECTED`; `saas.correacloud.com.br` e `vib.correacloud.com.br` tambem retornam HTTP 200.
 
 > **Regra de deploy do Ticketz:** quando forem alteradas rotas ou acoes de integracao em `fp-ticketz-custom-local/backend`, e obrigatorio reconstruir a imagem `fp-ticketz-sales-routing-alpha25-backend:test` e recriar somente o servico `backend` no compose. Alterar apenas o codigo-fonte nao atualiza o container que atende o Vib.
+
+### 2026-09-08 - Filtros de data em pedidos e financeiro
+
+- O quadro de pedidos inicia a coluna `Prontos para entrega` mostrando somente os pedidos do dia atual.
+- Foi adicionado um seletor de data para consultar os finalizados de outro dia sem misturar o historico na operacao atual.
+- A busca por numero, cliente ou telefone ignora o recorte de data, permitindo localizar um pedido anterior rapidamente.
+- Os cartoes do quadro agora exibem a data do pedido para evitar confusao ao consultar o historico.
+- O Financeiro ganhou um seletor de data; faturamento, pedidos pagos, ticket medio, delivery, cancelamentos e formas de pagamento passam a refletir a data escolhida.
+- O botao `Hoje` retorna o Financeiro rapidamente para o fechamento atual.
+- Validacao executada com `npm run build` no frontend.
