@@ -315,6 +315,47 @@ export class AppService {
     });
   }
 
+  async orderFinancialSummary(companyId: string | undefined, user: AuthUser) {
+    const scopedCompanyId = user.role === UserRole.super_admin ? String(companyId || "") : String(user.companyId || "");
+    if (!scopedCompanyId) throw new BadRequestException("companyId obrigatorio.");
+    if (user.role !== UserRole.super_admin && companyId && companyId !== user.companyId) {
+      throw new ForbiddenException("Empresa fora do escopo do usuario.");
+    }
+
+    await this.assertModuleEnabled("orders", scopedCompanyId);
+    const rows = await this.prisma.$queryRaw<Array<{
+      month: string;
+      completedOrders: number;
+      revenue: Prisma.Decimal;
+      averageTicket: Prisma.Decimal;
+      canceledOrders: number;
+      canceledTotal: Prisma.Decimal;
+    }>>(Prisma.sql`
+      SELECT
+        to_char(date_trunc('month', created_at AT TIME ZONE 'America/Sao_Paulo'), 'YYYY-MM') AS month,
+        count(*) FILTER (WHERE status = ${OrderStatus.completed}::"OrderStatus")::int AS "completedOrders",
+        coalesce(sum(total) FILTER (WHERE status = ${OrderStatus.completed}::"OrderStatus"), 0) AS revenue,
+        coalesce(avg(total) FILTER (WHERE status = ${OrderStatus.completed}::"OrderStatus"), 0) AS "averageTicket",
+        count(*) FILTER (WHERE status = ${OrderStatus.canceled}::"OrderStatus")::int AS "canceledOrders",
+        coalesce(sum(total) FILTER (WHERE status = ${OrderStatus.canceled}::"OrderStatus"), 0) AS "canceledTotal"
+      FROM orders
+      WHERE company_id = ${scopedCompanyId}
+        AND status IN (${OrderStatus.completed}::"OrderStatus", ${OrderStatus.canceled}::"OrderStatus")
+      GROUP BY 1
+      ORDER BY 1 DESC
+      LIMIT 24
+    `);
+
+    return rows.map(row => ({
+      month: row.month,
+      completedOrders: Number(row.completedOrders || 0),
+      revenue: Number(row.revenue || 0),
+      averageTicket: Number(row.averageTicket || 0),
+      canceledOrders: Number(row.canceledOrders || 0),
+      canceledTotal: Number(row.canceledTotal || 0)
+    }));
+  }
+
   async get(resource: string, id: string, user: AuthUser) {
     await this.assertModuleEnabled(resource, this.operationCompanyId(resource, user));
     if (resource === "companies") {

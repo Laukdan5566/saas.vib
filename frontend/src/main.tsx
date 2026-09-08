@@ -1158,6 +1158,13 @@ function shortDateLabel(value: string) {
   return `${day}/${month}/${year}`;
 }
 
+function monthLabel(value: unknown) {
+  const [year, month] = String(value || "").split("-");
+  if (!year || !month) return String(value || "-");
+  const date = new Date(Number(year), Number(month) - 1, 1);
+  return new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric" }).format(date);
+}
+
 function orderDisplayNumber(order: Record<string, unknown>) {
   return String(order.displayNumber || `#${String(order.id || "").slice(0, 8)}`);
 }
@@ -2496,9 +2503,25 @@ function RestaurantFinancialPage({
   const [saving, setSaving] = useState(false);
   const [query, setQuery] = useState("");
   const [selectedDate, setSelectedDate] = useState(() => localDateKey());
+  const [monthlySummary, setMonthlySummary] = useState<Record<string, unknown>[]>([]);
+
+  async function refreshMonthlySummary() {
+    const summary = await api(session, `/api/orders/financial-summary?companyId=${companyId}`);
+    setMonthlySummary(summary);
+  }
+
+  useEffect(() => {
+    setError("");
+    void refreshMonthlySummary().catch(err => {
+      setError(err instanceof Error ? err.message : "Erro ao carregar resumo mensal");
+    });
+  }, [session, companyId]);
 
   async function refreshOrders() {
-    const loadedOrders = await api(session, `/api/resources/orders?companyId=${companyId}`);
+    const [loadedOrders] = await Promise.all([
+      api(session, `/api/resources/orders?companyId=${companyId}`),
+      refreshMonthlySummary()
+    ]);
     onOrdersChanged(loadedOrders);
   }
 
@@ -2630,6 +2653,39 @@ function RestaurantFinancialPage({
         <article><span>Cancelados</span><strong>{canceledOrders.length}</strong></article>
         <article><span>Valor cancelado</span><strong>{money(canceledTotal)}</strong></article>
       </div>
+      <section className="monthlyFinancePanel">
+        <header>
+          <div>
+            <h3>Resumo mensal</h3>
+            <p>Historico consolidado de pedidos concluidos e cancelados.</p>
+          </div>
+        </header>
+        <div className="monthlyFinanceTable">
+          <div className="monthlyFinanceHead" aria-hidden="true">
+            <span>Mes</span>
+            <span>Pedidos concluidos</span>
+            <span>Faturamento</span>
+            <span>Ticket medio</span>
+            <span>Cancelados</span>
+            <span>Valor cancelado</span>
+          </div>
+          {monthlySummary.length === 0 ? (
+            <div className="emptyColumn">
+              <strong>Nenhum fechamento mensal ainda.</strong>
+              <p>Os meses aparecerao conforme os pedidos forem concluidos.</p>
+            </div>
+          ) : monthlySummary.map(row => (
+            <article className="monthlyFinanceRow" key={String(row.month)}>
+              <strong>{monthLabel(row.month)}</strong>
+              <span data-label="Pedidos concluidos">{String(row.completedOrders || 0)}</span>
+              <span data-label="Faturamento"><b>{money(row.revenue)}</b></span>
+              <span data-label="Ticket medio">{money(row.averageTicket)}</span>
+              <span data-label="Cancelados">{String(row.canceledOrders || 0)}</span>
+              <span data-label="Valor cancelado">{money(row.canceledTotal)}</span>
+            </article>
+          ))}
+        </div>
+      </section>
       <section className="financialOrdersPanel">
         <header>
           <div>

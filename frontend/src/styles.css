@@ -1270,6 +1270,65 @@ textarea {
   background: #ffffff;
 }
 
+.monthlyFinancePanel {
+  margin-top: 16px;
+  padding: 18px;
+  border: 1px solid #d8e0e6;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.monthlyFinancePanel > header {
+  margin-bottom: 14px;
+}
+
+.monthlyFinancePanel h3,
+.monthlyFinancePanel p {
+  margin: 0;
+}
+
+.monthlyFinancePanel p {
+  margin-top: 4px;
+  color: #60717d;
+}
+
+.monthlyFinanceTable {
+  overflow: hidden;
+  border: 1px solid #e1e8ee;
+  border-radius: 6px;
+}
+
+.monthlyFinanceHead,
+.monthlyFinanceRow {
+  display: grid;
+  grid-template-columns: minmax(150px, 1.2fr) repeat(5, minmax(110px, 1fr));
+  gap: 14px;
+  align-items: center;
+  padding: 12px 14px;
+}
+
+.monthlyFinanceHead {
+  background: #f1f5f8;
+  color: #52616d;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.monthlyFinanceRow {
+  border-top: 1px solid #e8edf1;
+  color: #425461;
+}
+
+.monthlyFinanceRow:first-of-type {
+  border-top: 0;
+}
+
+.monthlyFinanceRow > strong {
+  color: var(--ink);
+  text-transform: capitalize;
+}
+
 .financialOrdersPanel > header {
   display: flex;
   align-items: center;
@@ -4290,6 +4349,30 @@ textarea:focus {
 
   .financialOrdersPanel > header {
     display: grid;
+  }
+
+  .monthlyFinanceHead {
+    display: none;
+  }
+
+  .monthlyFinanceRow {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 16px;
+  }
+
+  .monthlyFinanceRow > strong {
+    grid-column: 1 / -1;
+    font-size: 17px;
+  }
+
+  .monthlyFinanceRow span::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 2px;
+    color: #60717d;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
   }
 
   .financialOrderActions {

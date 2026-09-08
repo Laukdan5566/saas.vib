@@ -1516,3 +1516,10 @@ Quando alguem trabalhar no projeto com Codex:
 - O Financeiro ganhou um seletor de data; faturamento, pedidos pagos, ticket medio, delivery, cancelamentos e formas de pagamento passam a refletir a data escolhida.
 - O botao `Hoje` retorna o Financeiro rapidamente para o fechamento atual.
 - Validacao executada com `npm run build` no frontend.
+
+### 2026-09-08 - Resumo mensal no financeiro
+
+- Adicionado ao Financeiro um resumo mensal consolidado diretamente pelo backend, sem depender do limite de pedidos carregados na tela.
+- Cada mes mostra pedidos concluidos, faturamento, ticket medio, quantidade de cancelamentos e valor cancelado.
+- O relatorio considera somente pedidos concluidos no faturamento e nao inclui calculo de taxa ou comissao da plataforma.
+- A consulta respeita a empresa do usuario e permite ao painel master consultar a empresa selecionada.
